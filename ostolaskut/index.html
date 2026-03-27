@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salon kaupungin ostolaskut 2024</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:Arial,sans-serif;font-size:14px;background:#f4f2ee;}
+
+/* Latausnäkymä */
+#load-view{position:fixed;inset:0;z-index:9998;background:rgba(244,242,238,.96);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px;}
+#load-view.show{display:flex;}
+#lv-msg{font-size:16px;color:#1a1916;max-width:400px;}
+#lv-sub{font-size:12px;color:#888;}
+#lv-bar{width:260px;height:4px;background:#ddd;border-radius:2px;overflow:hidden;}
+#lv-bar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
+
+/* Karttanäkymä */
+#shell{display:flex;flex-direction:column;height:100dvh;}
+#topbar{background:#fff;border-bottom:1px solid #ddd;padding:0 16px;height:52px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#topbar h1{font-size:14px;font-weight:700;white-space:nowrap;color:#1a1916;}
+.pill{background:#f0ede8;border:1px solid #ddd;border-radius:20px;padding:3px 9px;font-size:11px;color:#555;white-space:nowrap;}
+.spacer{flex:1;}
+#pbar{height:3px;background:#e0ddd8;flex-shrink:0;}
+#pbar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
+
+/* Desktop layout */
+#body{display:flex;flex:1;overflow:hidden;}
+#sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;overflow-y:auto;padding:14px;gap:16px;}
+.sb-t{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#aaa;margin-bottom:5px;font-weight:600;}
+select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f7f5;color:#1a1916;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.tog-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;}
+.tog{position:relative;width:36px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;position:absolute;}
+.tog-track{position:absolute;inset:0;background:#ccc;border-radius:10px;cursor:pointer;transition:background .2s;}
+.tog input:checked~.tog-track{background:#2d5fa6;}
+.tog-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.tog input:checked~.tog-thumb{transform:translateX(16px);}
+#leg{display:flex;flex-direction:column;gap:3px;}
+.lr{display:flex;align-items:center;gap:7px;font-size:12px;color:#444;cursor:pointer;padding:3px 4px;border-radius:5px;}
+.lr:hover{background:#f0ede8;}
+.lr.dim{opacity:.3;}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.leg-sz{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:#aaa;}
+#map{flex:1;}
+#infobar{height:28px;background:#fff;border-top:1px solid #ddd;display:flex;align-items:center;padding:0 16px;font-size:11px;color:#aaa;flex-shrink:0;}
+
+/* Popup */
+.pn{font-weight:700;font-size:14px;margin-bottom:6px;color:#1a1916;}
+.pr{font-size:12px;color:#666;margin:2px 0;}
+.ps{font-size:15px;font-weight:700;color:#2d5fa6;margin-top:8px;padding-top:8px;border-top:1px solid #eee;}
+.pt{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:5px;color:#fff;}
+
+/* LinkedIn badge (kartan päällä) */
+#li-badge{position:absolute;bottom:36px;left:10px;z-index:1000;background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.10);text-decoration:none;cursor:pointer;}
+#li-badge:hover{box-shadow:0 4px 12px rgba(0,0,0,.15);}
+#li-badge svg{width:18px;height:18px;flex-shrink:0;}
+#li-badge span{font-size:12px;font-weight:600;color:#0a66c2;white-space:nowrap;}
+
+/* Mobiili: bottom sheet suodattimille */
+#filter-btn{display:none;position:absolute;bottom:80px;right:10px;z-index:1000;background:#2d5fa6;color:#fff;border:none;border-radius:50px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(45,95,166,.4);display:flex;align-items:center;gap:6px;}
+#filter-sheet{display:none;position:fixed;bottom:0;left:0;right:0;z-index:2000;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;}
+#filter-sheet.open{display:block;}
+#sheet-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+#sheet-overlay{display:none;position:fixed;inset:0;z-index:1999;background:rgba(0,0,0,.3);}
+#sheet-overlay.open{display:block;}
+.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sheet-section{display:flex;flex-direction:column;gap:5px;}
+.sheet-section.full{grid-column:1/-1;}
+.sheet-label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#aaa;font-weight:600;}
+.sheet-leg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.sheet-leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#444;cursor:pointer;padding:4px 8px;border-radius:20px;border:1px solid #eee;background:#fafafa;}
+.sheet-leg-item.dim{opacity:.35;}
+.sheet-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+@media(max-width:700px){
+  #sidebar{display:none;}
+  #filter-btn{display:flex;}
+  #topbar h1{font-size:13px;}
+  .pill{display:none;}
+  #p-nyt{display:flex!important;}
+  #infobar{display:none;}
+  #li-badge{bottom:140px;}
+}
+</style>
+</head>
+<body>
+
+
+<!-- Lataus -->
+<div id="load-view">
+  <div style="font-size:28px">⏳</div>
+  <div id="lv-msg">Käsitellään...</div>
+  <div id="lv-sub"></div>
+  <div id="lv-bar"><div id="lv-bar-in"></div></div>
+</div>
+
+<!-- Latausnäkymä -->
+<div id="load-view">
+  <div style="font-size:28px">🗺️</div>
+  <div id="lv-msg">Ladataan karttaa...</div>
+  <div id="lv-sub"></div>
+  <div id="lv-bar"><div id="lv-bar-in"></div></div>
+</div>
+
+<!-- Sheet overlay (mobiili) -->
+<div id="sheet-overlay" onclick="closeSheet()"></div>
+
+<!-- Bottom sheet suodattimet (mobiili) -->
+<div id="filter-sheet">
+  <div id="sheet-handle"></div>
+  <div class="sheet-grid">
+    <div class="sheet-section">
+      <div class="sheet-label">Toimiala (PRH)</div>
+      <select id="sel-ta-m"><option value="">Kaikki</option></select>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">Palveluluokka</div>
+      <select id="sel-pl-m"><option value="">Kaikki</option></select>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">Minimisumma</div>
+      <select id="sel-min-m">
+        <option value="0">Kaikki</option>
+        <option value="1000">yli 1 000 €</option>
+        <option value="5000">yli 5 000 €</option>
+        <option value="10000">yli 10 000 €</option>
+        <option value="50000">yli 50 000 €</option>
+        <option value="100000">yli 100 000 €</option>
+      </select>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">Ryhmittele pisteet</div>
+      <div class="tog-row" style="margin-top:4px">
+        <label class="tog"><input type="checkbox" id="tog-cl-m" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+      </div>
+    </div>
+    <div class="sheet-section full">
+      <div class="sheet-label">Toimialalegenda (klikkaa piilottaaksesi)</div>
+      <div class="sheet-leg" id="sheet-leg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Kartta -->
+<div id="shell">
+  <div id="topbar">
+    <h1>Salon ostolaskut 2024</h1>
+    <span class="pill" id="p-yrit">–</span>
+    <span class="pill" id="p-sum">–</span>
+    <span class="pill" id="p-nyt">–</span>
+    <div class="spacer"></div>
+    <span style="font-size:10px;color:#ccc">CC BY 4.0</span>
+  </div>
+  <div id="pbar"><div id="pbar-in"></div></div>
+  <div id="body">
+    <div id="sidebar">
+      <div><div class="sb-t">Toimiala (PRH)</div><select id="sel-ta"><option value="">Kaikki</option></select></div>
+      <div><div class="sb-t">Palveluluokka</div><select id="sel-pl"><option value="">Kaikki</option></select></div>
+      <div>
+        <div class="sb-t">Minimisumma</div>
+        <select id="sel-min">
+          <option value="0">Kaikki</option>
+          <option value="1000">yli 1 000 €</option>
+          <option value="5000">yli 5 000 €</option>
+          <option value="10000">yli 10 000 €</option>
+          <option value="50000">yli 50 000 €</option>
+          <option value="100000">yli 100 000 €</option>
+        </select>
+      </div>
+      <div>
+        <div class="sb-t">Asetukset</div>
+        <div class="tog-row"><span>Ryhmittele pisteet</span>
+          <label class="tog"><input type="checkbox" id="tog-cl" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+        </div>
+      </div>
+      <div>
+        <div class="sb-t">Legenda <span style="font-size:9px;color:#ccc">(klikkaa)</span></div>
+        <div id="leg"></div>
+        <div class="leg-sz">
+          <svg width="50" height="14">
+            <circle cx="5" cy="7" r="3" fill="#546e7a" opacity=".9"/>
+            <circle cx="19" cy="7" r="5" fill="#546e7a" opacity=".9"/>
+            <circle cx="36" cy="7" r="7" fill="#546e7a" opacity=".9"/>
+          </svg>
+          = laskun euromäärä
+        </div>
+      </div>
+      <div style="margin-top:auto;font-size:10px;color:#ccc;line-height:1.8;">
+        CC BY 4.0 · Salon kaupunki<br>
+        Lähteet: PRH · Photon/Komoot
+      </div>
+      <div>
+        <div class="sb-t">Debug</div>
+        <div id="dbg" style="font-size:10px;font-family:monospace;color:#888;line-height:1.8;max-height:160px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div id="map-wrap" style="flex:1;position:relative;">
+      <div id="map" style="width:100%;height:100%;"></div>
+      <!-- LinkedIn badge -->
+      <a id="li-badge" href="https://www.linkedin.com/in/sami-seppanen-salo" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="#0a66c2" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+        <span>Sami Seppänen</span>
+      </a>
+      <!-- Suodatuspainike mobiilille -->
+      <button id="filter-btn" onclick="openSheet()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Suodata
+      </button>
+    </div>
+  </div>
+  <div id="infobar"><span id="info-txt">Ladataan...</span></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+function dbg(msg, ok) {
+  var el = document.getElementById('dbg');
+  if (!el) return;
+  var d = document.createElement('div');
+  d.style.color = ok === false ? '#c0392b' : ok === true ? '#27ae60' : '#888';
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
+
+var TOIMIALAT=[
+  {key:'Rakentaminen',         color:'#c0392b',words:['rakennus','rakentami','maarakennus','purkaminen','talonrakennus']},
+  {key:'Terveys ja sosiaali',  color:'#27ae60',words:['terveys','sosiaali','hoito','lääkinnäl','hammas','psyk','vanhus','kuntoutus']},
+  {key:'Koulutus',             color:'#8e44ad',words:['koulu','opetus','koulutus','päiväkoti','varhais']},
+  {key:'Kauppa',               color:'#e67e22',words:['kauppa','myynti','tukku','vähittäis']},
+  {key:'Kuljetus',             color:'#d45a8a',words:['kuljetus','liikenne','logistiikka','varastointi','posti']},
+  {key:'Kiinteistö',           color:'#2980b9',words:['kiinteistö','isännöi','vuokraus','siivous','puhtaanapito']},
+  {key:'Teollisuus',           color:'#16a085',words:['valmistus','teollisuus','elintarvike','metalli','paperi','puu']},
+  {key:'IT ja viestintä',      color:'#2c3e50',words:['tietojenkäsittely','ohjelmisto','it-','ict','tietoliikenne']},
+  {key:'Energia ja vesi',      color:'#f39c12',words:['energia','sähkö','lämpö','vesi','jäte','ympäristö']},
+  {key:'Hallinto',             color:'#7f8c8d',words:['hallinto','julkinen','lakiasiain','tili','henkilöstö','konsultointi']},
+  {key:'Muu',                  color:'#546e7a',words:[]}
+];
+function getTa(s){if(s){var l=s.toLowerCase();for(var i=0;i<TOIMIALAT.length-1;i++){for(var j=0;j<TOIMIALAT[i].words.length;j++){if(l.indexOf(TOIMIALAT[i].words[j])!==-1)return TOIMIALAT[i];}}}return TOIMIALAT[TOIMIALAT.length-1];}
+function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
+function eur(n){return n.toLocaleString('fi-FI',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
+function pct(p){document.getElementById('lv-bar-in').style.width=p+'%';document.getElementById('pbar-in').style.width=p+'%';}
+function msg(m,s){document.getElementById('lv-msg').textContent=m;document.getElementById('lv-sub').textContent=s||'';}
+
+var map,cg,allData=[],activeKeys={},prhC={},geoC={};
+for(var i=0;i<TOIMIALAT.length;i++)activeKeys[TOIMIALAT[i].key]=true;
+
+// Drag & drop
+async function fetchAll(yrit){
+  document.getElementById('load-view').classList.remove('show');
+
+  // Kokeillaan ensin valmista JSON-tiedostoa
+  var json=await lataaJSON();
+  if(json&&json.length>0){
+    dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
+    for(var i=0;i<json.length;i++){
+      var y=json[i];
+      y.ta=getTa(y.ta||'');
+      if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
+      allData.push(y);
+    }
+    var geo=allData.filter(function(d){return d.coords;}).length;
+    document.getElementById('p-geo').textContent=geo+' paikannettu';
+    buildLegend(); redraw(); pct(100);
+    return;
+  }
+
+  // JSON ei löydy — geokoodataan reaaliajassa Photonilla (hidas)
+  dbg('yritykset.json ei löydy, geokoodataan reaaliajassa...', false);
+  var ko=yrit.slice(0,100), geo=0;
+  for(var i=0;i<ko.length;i++){
+    var y=ko[i];
+    y.ta=getTa(y.taRivi||'');
+    y.coords=await geocode(y.nimi+' Finland');
+    if(y.coords) geo++;
+    allData.push(y);
+    pct(18+Math.round((i+1)/ko.length*78));
+    document.getElementById('p-geo').textContent=geo+' paikannettu';
+    document.getElementById('info-txt').textContent='Geokoodataan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua';
+    buildLegend(); redraw();
+    await new Promise(function(r){setTimeout(r,350);});
+  }
+  dbg('Valmis: '+geo+'/'+ko.length+' paikannettua', geo>0);
+  pct(100);
+}
+
+function redraw(){
+  if(!cg)return;
+  cg.clearLayers();
+  var minSum=parseFloat(document.getElementById('sel-min').value)||0;
+  var selTa=document.getElementById('sel-ta').value;
+  var selPl=document.getElementById('sel-pl').value;
+  var nakyy=0;
+  for(var i=0;i<allData.length;i++){
+    var d=allData[i];
+    if(!d.coords)continue;
+    // Jos palveluluokka valittu, käytä sen summaa pisteen kokoon
+    var naytSumma=d.sum;
+    if(selPl){
+      naytSumma=(d.palvluokat&&d.palvluokat[selPl])||0;
+      if(naytSumma===0)continue;
+    }
+    if(naytSumma<minSum)continue;
+    if(selTa&&d.ta.key!==selTa)continue;
+    if(!activeKeys[d.ta.key])continue;
+    nakyy++;
+    var m=L.circleMarker([d.coords.lat,d.coords.lng],{
+      radius:getR(naytSumma),fillColor:d.ta.color,
+      color:'#fff',weight:1.5,fillOpacity:.78,opacity:1
+    });
+    // Palveluluokkaerittely popupiin
+    var plHtml='';
+    if(d.palvluokat){
+      var plLista=Object.keys(d.palvluokat);
+      var nayta=Math.min(plLista.length,5);
+      for(var j=0;j<nayta;j++){
+        var plNimi=plLista[j];
+        var plSum=d.palvluokat[plNimi];
+        var plPct=d.sum>0?Math.round(plSum/d.sum*100):0;
+        var active=selPl===plNimi?'font-weight:600;':'';
+        plHtml+='<div class="pr" style="display:flex;justify-content:space-between;gap:8px;'+active+'">'+
+          '<span>'+plNimi+'</span>'+
+          '<span style="white-space:nowrap;color:#2d5fa6">'+eur(plSum)+
+          ' <small style="color:#999">'+plPct+'%</small></span></div>';
+      }
+      if(plLista.length>5)
+        plHtml+='<div class="pr" style="color:#999">...ja '+(plLista.length-5)+' muuta</div>';
+    }
+    m.bindPopup(
+      '<div class="pn">'+(d.nimi||'–')+'</div>'+
+      '<div class="pr">Y-tunnus: '+d.yid+'</div>'+
+      '<div class="pr">Toimiala: '+(d.taStr||'–')+'</div>'+
+      '<div class="pr">Osoite: '+(d.osoite||'–')+'</div>'+
+      '<div class="pr">Laskuja: '+d.lkm+' kpl</div>'+
+      '<div class="ps">Yhteensä: '+eur(d.sum)+'</div>'+
+      (plHtml?
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee">'+
+        '<div style="font-size:11px;color:#999;margin-bottom:4px">Palveluluokittain:</div>'+
+        plHtml+'</div>':'')+
+      '<div style="margin-top:5px"><span class="pt" style="background:'+d.ta.color+'">'+d.ta.key+'</span></div>',
+      {maxWidth:320}
+    );
+    cg.addLayer(m);
+  }
+  var gl=0;for(var j=0;j<allData.length;j++)if(allData[j].coords)gl++;
+  document.getElementById('p-nyt').textContent=nakyy+' kartalla';
+  document.getElementById('info-txt').textContent=nakyy+' näkyvissä · '+gl+' paikannettua';
+}
+
+
+function buildLegend(){
+  var pr={};for(var i=0;i<allData.length;i++)pr[allData[i].ta.key]=true;
+  var le=document.getElementById('leg');le.innerHTML='';
+  var sl=document.getElementById('sel-ta');var cv=sl.value;
+  sl.innerHTML='<option value="">Kaikki</option>';
+  for(var j=0;j<TOIMIALAT.length;j++){
+    var t=TOIMIALAT[j];if(!pr[t.key])continue;
+    (function(ta){
+      var row=document.createElement('div');row.className='lr'+(activeKeys[ta.key]?'':' dim');
+      row.innerHTML='<div class="ld" style="background:'+ta.color+'"></div><span>'+ta.key+'</span>';
+      row.onclick=function(){activeKeys[ta.key]=!activeKeys[ta.key];row.classList.toggle('dim',!activeKeys[ta.key]);redraw();};
+      le.appendChild(row);
+    })(t);
+    var o=document.createElement('option');o.value=t.key;o.textContent=t.key;sl.appendChild(o);
+  }
+  if(cv)sl.value=cv;
+}
+
+// ── Sheet (mobiili) ────────────────────────────────────────────────────────
+function openSheet(){ document.getElementById('filter-sheet').classList.add('open'); document.getElementById('sheet-overlay').classList.add('open'); }
+function closeSheet(){ document.getElementById('filter-sheet').classList.remove('open'); document.getElementById('sheet-overlay').classList.remove('open'); }
+
+// Synkronoi desktop- ja mobiilisuodattimet
+function syncFilters(src){
+  var pairs=[['sel-ta','sel-ta-m'],['sel-pl','sel-pl-m'],['sel-min','sel-min-m']];
+  pairs.forEach(function(p){
+    var other=src===p[0]?p[1]:p[0];
+    var el=document.getElementById(other);
+    var val=document.getElementById(src).value;
+    if(el) el.value=val;
+  });
+  redraw();
+  closeSheet();
+}
+
+window.addEventListener('load',function(){
+  // Kartta heti valmiiksi
+  map=L.map('map').setView([60.385,23.129],10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+  cg=L.markerClusterGroup({maxClusterRadius:50});
+  map.addLayer(cg);
+  document.getElementById('sel-ta').addEventListener('change',redraw);
+  document.getElementById('sel-min').addEventListener('change',redraw);
+  document.getElementById('tog-cl').addEventListener('change',function(){
+    if(this.checked){map.addLayer(cg);}
+    else{map.removeLayer(cg);var ls=cg.getLayers();for(var i=0;i<ls.length;i++)map.addLayer(ls[i]);}
+  });
+
+  // Kokeillaan ensin yritykset.json (toimii GitHub Pagesissa ja localhostissa)
+  // Jos ei löydy, näytetään Excel-latausnäkymä
+  tryLataaJSON();
+});
+
+async function tryLataaJSON(){
+  try{
+    var r=await fetch('yritykset.json');
+    if(r.ok){
+      var json=await r.json();
+      if(json&&json.length>0){
+              document.getElementById('load-view').classList.add('show');
+        msg('Ladataan karttaa...');
+        pct(10);
+        // Alustetaan suoraan JSONista
+        var totalSum=0;
+        for(var i=0;i<json.length;i++) totalSum+=json[i].sum||0;
+        document.getElementById('p-yrit').textContent=json.length+' yritystä';
+        document.getElementById('p-sum').textContent=eur(totalSum);
+        for(var i=0;i<json.length;i++){
+          var y=json[i];
+          y.ta=getTa(y.ta||'');
+          if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
+          allData.push(y);
+        }
+        var geo=allData.filter(function(d){return d.coords;}).length;
+        document.getElementById('p-geo').textContent=geo+' paikannettu';
+        dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
+        buildLegend();
+        redraw();
+        pct(100);
+        document.getElementById('load-view').classList.remove('show');
+        return;
+      }
+    }
+  }catch(e){
+    dbg('yritykset.json virhe: '+e.message, false);
+  }
+  // JSON ei löydy — näytetään Excel-latausnäkymä
+  dbg('yritykset.json ei löydy palvelimelta!', false);
+  // Paikallisella palvelimella kokeillaan myös Excel-tiedostoa
+}
+
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salon kaupungin ostolaskut 2024</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:Arial,sans-serif;font-size:14px;background:#f4f2ee;}
+
+/* Latausnäkymä */
+#load-view{position:fixed;inset:0;z-index:9998;background:rgba(244,242,238,.96);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px;}
+#load-view.show{display:flex;}
+#lv-msg{font-size:16px;color:#1a1916;max-width:400px;}
+#lv-sub{font-size:12px;color:#888;}
+#lv-bar{width:260px;height:4px;background:#ddd;border-radius:2px;overflow:hidden;}
+#lv-bar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
+
+/* Karttanäkymä */
+#shell{display:flex;flex-direction:column;height:100dvh;}
+#topbar{background:#fff;border-bottom:1px solid #ddd;padding:0 16px;height:52px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#topbar h1{font-size:14px;font-weight:700;white-space:nowrap;color:#1a1916;}
+.pill{background:#f0ede8;border:1px solid #ddd;border-radius:20px;padding:3px 9px;font-size:11px;color:#555;white-space:nowrap;}
+.spacer{flex:1;}
+#pbar{height:3px;background:#e0ddd8;flex-shrink:0;}
+#pbar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
+
+/* Desktop layout */
+#body{display:flex;flex:1;overflow:hidden;}
+#sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;overflow-y:auto;padding:14px;gap:16px;}
+.sb-t{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#aaa;margin-bottom:5px;font-weight:600;}
+select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f7f5;color:#1a1916;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
+.tog-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;}
+.tog{position:relative;width:36px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;position:absolute;}
+.tog-track{position:absolute;inset:0;background:#ccc;border-radius:10px;cursor:pointer;transition:background .2s;}
+.tog input:checked~.tog-track{background:#2d5fa6;}
+.tog-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.tog input:checked~.tog-thumb{transform:translateX(16px);}
+#leg{display:flex;flex-direction:column;gap:3px;}
+.lr{display:flex;align-items:center;gap:7px;font-size:12px;color:#444;cursor:pointer;padding:3px 4px;border-radius:5px;}
+.lr:hover{background:#f0ede8;}
+.lr.dim{opacity:.3;}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.leg-sz{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:#aaa;}
+#map{flex:1;}
+#infobar{height:28px;background:#fff;border-top:1px solid #ddd;display:flex;align-items:center;padding:0 16px;font-size:11px;color:#aaa;flex-shrink:0;}
+
+/* Popup */
+.pn{font-weight:700;font-size:14px;margin-bottom:6px;color:#1a1916;}
+.pr{font-size:12px;color:#666;margin:2px 0;}
+.ps{font-size:15px;font-weight:700;color:#2d5fa6;margin-top:8px;padding-top:8px;border-top:1px solid #eee;}
+.pt{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:5px;color:#fff;}
+
+/* LinkedIn badge (kartan päällä) */
+#li-badge{position:absolute;bottom:36px;left:10px;z-index:1000;background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.10);text-decoration:none;cursor:pointer;}
+#li-badge:hover{box-shadow:0 4px 12px rgba(0,0,0,.15);}
+#li-badge svg{width:18px;height:18px;flex-shrink:0;}
+#li-badge span{font-size:12px;font-weight:600;color:#0a66c2;white-space:nowrap;}
+
+/* Mobiili: bottom sheet suodattimille */
+#filter-btn{display:none;position:absolute;bottom:80px;right:10px;z-index:1000;background:#2d5fa6;color:#fff;border:none;border-radius:50px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(45,95,166,.4);display:flex;align-items:center;gap:6px;}
+#filter-sheet{display:none;position:fixed;bottom:0;left:0;right:0;z-index:2000;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;}
+#filter-sheet.open{display:block;}
+#sheet-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+#sheet-overlay{display:none;position:fixed;inset:0;z-index:1999;background:rgba(0,0,0,.3);}
+#sheet-overlay.open{display:block;}
+.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sheet-section{display:flex;flex-direction:column;gap:5px;}
+.sheet-section.full{grid-column:1/-1;}
+.sheet-label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#aaa;font-weight:600;}
+.sheet-leg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.sheet-leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#444;cursor:pointer;padding:4px 8px;border-radius:20px;border:1px solid #eee;background:#fafafa;}
+.sheet-leg-item.dim{opacity:.35;}
+.sheet-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+@media(max-width:700px){
+  #sidebar{display:none;}
+  #filter-btn{display:flex;}
+  #topbar h1{font-size:13px;}
+  .pill{display:none;}
+  #p-nyt{display:flex!important;}
+  #infobar{display:none;}
+  #li-badge{bottom:140px;}
+}
+</style>
+</head>
+<body>
+
+
+<!-- Lataus -->
+<div id="load-view">
+  <div style="font-size:28px">⏳</div>
+  <div id="lv-msg">Käsitellään...</div>
+  <div id="lv-sub"></div>
+  <div id="lv-bar"><div id="lv-bar-in"></div></div>
+</div>
+
+<!-- Latausnäkymä -->
+<div id="load-view">
+  <div style="font-size:28px">🗺️</div>
+  <div id="lv-msg">Ladataan karttaa...</div>
+  <div id="lv-sub"></div>
+  <div id="lv-bar"><div id="lv-bar-in"></div></div>
+</div>
+
+<!-- Sheet overlay (mobiili) -->
+<div id="sheet-overlay" onclick="closeSheet()"></div>
+
+<!-- Bottom sheet suodattimet (mobiili) -->
+<div id="filter-sheet">
+  <div id="sheet-handle"></div>
+  <div class="sheet-grid">
+    <div class="sheet-section">
+      <div class="sheet-label">Toimiala (PRH)</div>
+      <select id="sel-ta-m"><option value="">Kaikki</option></select>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">Palveluluokka</div>
+      <select id="sel-pl-m"><option value="">Kaikki</option></select>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">Minimisumma</div>
+      <select id="sel-min-m">
+        <option value="0">Kaikki</option>
+        <option value="1000">yli 1 000 €</option>
+        <option value="5000">yli 5 000 €</option>
+        <option value="10000">yli 10 000 €</option>
+        <option value="50000">yli 50 000 €</option>
+        <option value="100000">yli 100 000 €</option>
+      </select>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">Ryhmittele pisteet</div>
+      <div class="tog-row" style="margin-top:4px">
+        <label class="tog"><input type="checkbox" id="tog-cl-m" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+      </div>
+    </div>
+    <div class="sheet-section full">
+      <div class="sheet-label">Toimialalegenda (klikkaa piilottaaksesi)</div>
+      <div class="sheet-leg" id="sheet-leg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Kartta -->
+<div id="shell">
+  <div id="topbar">
+    <h1>Salon ostolaskut 2024</h1>
+    <span class="pill" id="p-yrit">–</span>
+    <span class="pill" id="p-sum">–</span>
+    <span class="pill" id="p-nyt">–</span>
+    <div class="spacer"></div>
+    <span style="font-size:10px;color:#ccc">CC BY 4.0</span>
+  </div>
+  <div id="pbar"><div id="pbar-in"></div></div>
+  <div id="body">
+    <div id="sidebar">
+      <div><div class="sb-t">Toimiala (PRH)</div><select id="sel-ta"><option value="">Kaikki</option></select></div>
+      <div><div class="sb-t">Palveluluokka</div><select id="sel-pl"><option value="">Kaikki</option></select></div>
+      <div>
+        <div class="sb-t">Minimisumma</div>
+        <select id="sel-min">
+          <option value="0">Kaikki</option>
+          <option value="1000">yli 1 000 €</option>
+          <option value="5000">yli 5 000 €</option>
+          <option value="10000">yli 10 000 €</option>
+          <option value="50000">yli 50 000 €</option>
+          <option value="100000">yli 100 000 €</option>
+        </select>
+      </div>
+      <div>
+        <div class="sb-t">Asetukset</div>
+        <div class="tog-row"><span>Ryhmittele pisteet</span>
+          <label class="tog"><input type="checkbox" id="tog-cl" checked><div class="tog-track"></div><div class="tog-thumb"></div></label>
+        </div>
+      </div>
+      <div>
+        <div class="sb-t">Legenda <span style="font-size:9px;color:#ccc">(klikkaa)</span></div>
+        <div id="leg"></div>
+        <div class="leg-sz">
+          <svg width="50" height="14">
+            <circle cx="5" cy="7" r="3" fill="#546e7a" opacity=".9"/>
+            <circle cx="19" cy="7" r="5" fill="#546e7a" opacity=".9"/>
+            <circle cx="36" cy="7" r="7" fill="#546e7a" opacity=".9"/>
+          </svg>
+          = laskun euromäärä
+        </div>
+      </div>
+      <div style="margin-top:auto;font-size:10px;color:#ccc;line-height:1.8;">
+        CC BY 4.0 · Salon kaupunki<br>
+        Lähteet: PRH · Photon/Komoot
+      </div>
+      <div>
+        <div class="sb-t">Debug</div>
+        <div id="dbg" style="font-size:10px;font-family:monospace;color:#888;line-height:1.8;max-height:160px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div id="map-wrap" style="flex:1;position:relative;">
+      <div id="map" style="width:100%;height:100%;"></div>
+      <!-- LinkedIn badge -->
+      <a id="li-badge" href="https://www.linkedin.com/in/sami-seppanen-salo" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="#0a66c2" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+        </svg>
+        <span>Sami Seppänen</span>
+      </a>
+      <!-- Suodatuspainike mobiilille -->
+      <button id="filter-btn" onclick="openSheet()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Suodata
+      </button>
+    </div>
+  </div>
+  <div id="infobar"><span id="info-txt">Ladataan...</span></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+function dbg(msg, ok) {
+  var el = document.getElementById('dbg');
+  if (!el) return;
+  var d = document.createElement('div');
+  d.style.color = ok === false ? '#c0392b' : ok === true ? '#27ae60' : '#888';
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+}
+</script>
+</body>
+</html>
