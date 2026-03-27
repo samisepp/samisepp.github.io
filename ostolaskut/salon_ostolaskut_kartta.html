@@ -224,6 +224,8 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
 <script>
+function sid(id){ return document.getElementById(id); }
+function sset(id, val){ var el=document.getElementById(id); if(el) el.textContent=val; }
 function dbg(msg, ok) {
   var el = document.getElementById('dbg');
   if (!el) return;
@@ -252,7 +254,7 @@ function getTa(s){if(s){var l=s.toLowerCase();for(var i=0;i<TOIMIALAT.length-1;i
 function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
 function eur(n){return n.toLocaleString('fi-FI',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
 function pct(p){document.getElementById('lv-bar-in').style.width=p+'%';document.getElementById('pbar-in').style.width=p+'%';}
-function msg(m,s){document.getElementById('lv-msg').textContent=m;document.getElementById('lv-sub').textContent=s||'';}
+function msg(m,s){sset('lv-msg', m);sset('lv-sub', s||'');}
 
 var map,cg,allData=[],activeKeys={},prhC={},geoC={};
 for(var i=0;i<TOIMIALAT.length;i++)activeKeys[TOIMIALAT[i].key]=true;
@@ -272,7 +274,7 @@ async function fetchAll(yrit){
       allData.push(y);
     }
     var geo=allData.filter(function(d){return d.coords;}).length;
-    document.getElementById('p-geo').textContent=geo+' paikannettu';
+    sset('p-geo', geo+' paikannettu');
     buildLegend(); redraw(); pct(100);
     return;
   }
@@ -287,8 +289,8 @@ async function fetchAll(yrit){
     if(y.coords) geo++;
     allData.push(y);
     pct(18+Math.round((i+1)/ko.length*78));
-    document.getElementById('p-geo').textContent=geo+' paikannettu';
-    document.getElementById('info-txt').textContent='Geokoodataan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua';
+    sset('p-geo', geo+' paikannettu');
+    sset('info-txt', 'Geokoodataan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua');
     buildLegend(); redraw();
     await new Promise(function(r){setTimeout(r,350);});
   }
@@ -355,8 +357,8 @@ function redraw(){
     cg.addLayer(m);
   }
   var gl=0;for(var j=0;j<allData.length;j++)if(allData[j].coords)gl++;
-  document.getElementById('p-nyt').textContent=nakyy+' kartalla';
-  document.getElementById('info-txt').textContent=nakyy+' näkyvissä · '+gl+' paikannettua';
+  sset('p-nyt', nakyy+' kartalla');
+  sset('info-txt', nakyy+' näkyvissä · '+gl+' paikannettua');
 }
 
 
@@ -425,8 +427,8 @@ async function tryLataaJSON(){
         // Alustetaan suoraan JSONista
         var totalSum=0;
         for(var i=0;i<json.length;i++) totalSum+=json[i].sum||0;
-        document.getElementById('p-yrit').textContent=json.length+' yritystä';
-        document.getElementById('p-sum').textContent=eur(totalSum);
+        sset('p-yrit', json.length+' yritystä');
+        sset('p-sum', eur(totalSum));
         msg('Käsitellään toimittajatietoja...', json.length+' yritystä · '+eur(totalSum)+' yhteensä');
         pct(30);
         setTimeout(function(){
@@ -437,7 +439,7 @@ async function tryLataaJSON(){
             allData.push(y);
           }
           var geo=allData.filter(function(d){return d.coords;}).length;
-          document.getElementById('p-geo').textContent=geo+' paikannettu';
+          sset('p-geo', geo+' paikannettu');
           dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
           msg('Piirretään karttaa...', 'Paikannettu '+geo+' yritystä kartalle');
           pct(80);
