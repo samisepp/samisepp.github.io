@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Salon kaupungin ostolaskut 2024</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -257,38 +260,6 @@ var TOIMIALAT=[
   {key:'Muu',                  color:'#546e7a',words:[]}
 ];
 
-var JHS200={
-  "100":"Yleishallinto","110":"Kuntajohtaminen","111":"Poliittinen päätöksenteko",
-  "112":"Kuntastrategia ja johtaminen","120":"Tukipalvelut","121":"Talous- ja henkilöstöhallinto",
-  "122":"Tietohallinto ja digitalisaatio","123":"Viestintä ja markkinointi","124":"Lakipalvelut",
-  "125":"Kiinteistöhallinto","130":"Turvallisuus ja valvonta","200":"Elinvoima ja ympäristö",
-  "210":"Elinkeinot ja yrittäjyys","211":"Elinkeinopolitiikka ja yrityspalvelut",
-  "212":"Maankäyttö ja kaavoitus","213":"Rakentamisen luvat ja valvonta",
-  "220":"Ympäristö ja luonnonvarat","221":"Ympäristönsuojelu","222":"Jätehuolto",
-  "223":"Vesihuolto","224":"Energiahuolto","230":"Liikenne ja infrastruktuuri",
-  "231":"Katujen ja teiden ylläpito","232":"Joukkoliikenne","233":"Pysäköinti",
-  "300":"Sivistys","301":"Varhaiskasvatus","3011":"Päiväkotitoiminta",
-  "3012":"Perhepäivähoito","3013":"Muu varhaiskasvatus","302":"Perusopetus",
-  "3021":"Alakoulu","3022":"Yläkoulu","3023":"Erityisopetus","3024":"Aamu- ja iltapäivätoiminta",
-  "303":"Lukiokoulutus","304":"Ammatillinen koulutus","305":"Vapaa sivistystyö",
-  "3051":"Kansalaisopisto","3052":"Kansanopisto","306":"Kirjasto","307":"Kulttuuri",
-  "3071":"Kulttuuripalvelut","3072":"Museot","3073":"Teatteri ja orkesteri",
-  "308":"Liikunta","3081":"Liikuntapaikat","3082":"Liikuntapalvelut",
-  "309":"Nuorisopalvelut","310":"Kotoutuminen","320":"Sosiaali- ja terveyspalvelut",
-  "321":"Sosiaalityö","322":"Lapsiperheiden palvelut","3221":"Lastensuojelu",
-  "3222":"Perhetyö","323":"Vammaispalvelut","3231":"Vaikeavammaisten palvelut",
-  "3232":"Kehitysvammapalvelut","324":"Ikääntyneiden palvelut","3241":"Kotihoito",
-  "3242":"Asumispalvelut ikääntyneille","3243":"Laitoshoito",
-  "325":"Mielenterveys- ja päihdepalvelut","3251":"Mielenterveyspalvelut",
-  "3252":"Päihdepalvelut","326":"Terveyspalvelut","3261":"Perusterveydenhuolto",
-  "3262":"Suun terveydenhuolto","3263":"Mielenterveys ja psykiatria",
-  "327":"Toimeentulotuki","328":"Asumispalvelut","400":"Maankäyttö ja rakentaminen",
-  "410":"Kaavoitus","420":"Tonttituotanto","430":"Rakentaminen",
-  "500":"Tekninen toimi","510":"Yhdyskuntatekniikka","520":"Rakennuttaminen",
-  "530":"Tilapalvelut","3501":"Perusopetuksen kuljetus","3502":"Varhaiskasvatuksen kuljetus",
-  "3503":"Vammaispalvelujen kuljetus","3504":"Ikääntyneiden kuljetus"
-};
-function jhs(koodi){ var k=String(koodi).trim(); return JHS200[k]||null; }
 function getTa(s){if(s){var l=s.toLowerCase();for(var i=0;i<TOIMIALAT.length-1;i++){for(var j=0;j<TOIMIALAT[i].words.length;j++){if(l.indexOf(TOIMIALAT[i].words[j])!==-1)return TOIMIALAT[i];}}}return TOIMIALAT[TOIMIALAT.length-1];}
 function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
 function eur(n){return n.toLocaleString('fi-FI',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
@@ -438,14 +409,6 @@ window.addEventListener('load',function(){
 
 async function tryLataaJSON(){
   // Ladataan ensin palveluluokkanimet jos saatavilla
-  try{
-    var jr=await fetch('jhs200.json');
-    if(jr.ok){
-      var jdata=await jr.json();
-      Object.assign(JHS200, jdata);
-      dbg('jhs200.json ladattu: '+Object.keys(jdata).length+' koodia', true);
-    }
-  }catch(e){ dbg('jhs200.json ei löydy, käytetään sisäistä taulukkoa', false); }
 
   try{
     var r=await fetch('yritykset.json');
