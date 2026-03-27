@@ -244,7 +244,8 @@ function aggregate(rows){
 async function fetchPRH(yid){
   if(prhC[yid]!==undefined)return prhC[yid];
   try{
-    var r=await fetch('https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId='+encodeURIComponent(yid));
+    var ac1=new AbortController();setTimeout(function(){ac1.abort();},5000);
+    var r=await fetch('https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId='+encodeURIComponent(yid),{signal:ac1.signal});
     if(!r.ok){prhC[yid]=null;return null;}
     var d=await r.json();var c=d.results&&d.results[0];
     if(!c){prhC[yid]=null;return null;}
@@ -263,7 +264,8 @@ async function geocode(os){
   if(!os)return null;
   if(geoC[os]!==undefined)return geoC[os];
   try{
-    var r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(os+' Finland')+'&limit=1&lang=fi&bbox=19.0,59.5,32.0,70.5');
+    var ac2=new AbortController();setTimeout(function(){ac2.abort();},5000);
+    var r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(os+' Finland')+'&limit=1&lang=fi&bbox=19.0,59.5,32.0,70.5',{signal:ac2.signal});
     var d=await r.json();
     if(d.features&&d.features.length){var c=d.features[0].geometry.coordinates;geoC[os]={lat:c[1],lng:c[0]};return geoC[os];}
   }catch(e){}
@@ -271,6 +273,7 @@ async function geocode(os){
 }
 
 async function fetchAll(yrit){
+  document.getElementById('load-view').classList.remove('show');
   var ko=yrit.slice(0,100),geo=0;
   for(var i=0;i<ko.length;i++){
     var y=ko[i];
@@ -290,12 +293,12 @@ async function fetchAll(yrit){
     pct(18+Math.round((i+1)/ko.length*78));
     msg('Haetaan osoitteita... '+(i+1)+'/'+ko.length,geo+' paikannettu');
     document.getElementById('p-geo').textContent=geo+' paikannettu';
+    document.getElementById('info-txt').textContent='Haetaan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua · kartta päivittyy...';
     buildLegend();redraw();
     await new Promise(function(r){setTimeout(r,350);});
   }
   dbg('Valmis: '+geo+'/'+ko.length+' paikannettua', geo>0);
   pct(100);
-  document.getElementById('load-view').classList.remove('show');
 }
 
 function redraw(){
