@@ -193,9 +193,20 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
           = laskun euromäärä
         </div>
       </div>
-      <div style="margin-top:auto;font-size:10px;color:#ccc;line-height:1.8;">
-        CC BY 4.0 · Salon kaupunki<br>
-        Lähteet: PRH · Photon/Komoot
+      <div style="margin-top:auto;font-size:10px;color:#999;line-height:1.9;border-top:1px solid #eee;padding-top:10px;">
+        <div style="font-weight:600;color:#888;margin-bottom:4px;font-size:9px;text-transform:uppercase;letter-spacing:.6px">Avoin data — lähteet</div>
+        <a href="https://avoindata.suomi.fi/data/dataset/36d08676-a7f9-4345-8ad3-028281ebc1cb" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;">📊 Salon ostolaskut 2024</a>
+        <span style="color:#bbb;font-size:9px">Salon kaupunki · CC BY 4.0</span><br>
+        <a href="https://avoindata.prh.fi" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">🏢 Yritys- ja yhteisötiedot</a>
+        <span style="color:#bbb;font-size:9px">PRH / YTJ · CC BY 4.0</span><br>
+        <a href="https://yhdistysrekisteri.prh.fi" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">🤝 Yhdistysrekisteri</a>
+        <span style="color:#bbb;font-size:9px">PRH · julkinen tieto</span><br>
+        <a href="https://photon.komoot.io" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">📍 Geokoodaus</a>
+        <span style="color:#bbb;font-size:9px">Photon/Komoot · CC BY 4.0</span><br>
+        <a href="https://www.openstreetmap.org" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">🗺️ Taustakartta</a>
+        <span style="color:#bbb;font-size:9px">OpenStreetMap · ODbL · &copy; CARTO</span><br>
+        <a href="https://www.avoindata.fi/data/fi/dataset/jhs-200-kuntien-ja-kuntayhtymien-palveluluokitus" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">📋 JHS 200 Palveluluokitus</a>
+        <span style="color:#bbb;font-size:9px">Valtiovarainministeriö · CC BY 4.0</span>
       </div>
       <div>
         <div class="sb-t">Debug</div>
@@ -358,22 +369,26 @@ function redraw(){
     // Palveluluokkaerittely popupiin
     var plHtml='';
     if(d.palvluokat){
-      var plLista=Object.keys(d.palvluokat);
+      // Järjestetään summan mukaan suurimmasta pienimpään
+      var plLista=Object.keys(d.palvluokat).sort(function(a,b){
+        return d.palvluokat[b]-d.palvluokat[a];
+      });
       var nayta=Math.min(plLista.length,5);
       for(var j=0;j<nayta;j++){
         var plNimi=plLista[j];
         var plSum=d.palvluokat[plNimi];
         var plPct=d.sum>0?Math.round(plSum/d.sum*100):0;
         var active=selPl===plNimi?'font-weight:600;':'';
-        var plSelite=jhs(plNimi);
-        var plLabel=plSelite?plNimi+' '+plSelite:plNimi;
-        plHtml+='<div class="pr" style="display:flex;justify-content:space-between;gap:8px;'+active+'">'+
-          '<span>'+plLabel+'</span>'+
-          '<span style="white-space:nowrap;color:#2d5fa6">'+eur(plSum)+
+        var plKoodi=String(plNimi).trim();
+        var plSelite=JHS200[plKoodi]||null;
+        var plLabel=plSelite?'<strong>'+plKoodi+'</strong> '+plSelite:plKoodi;
+        plHtml+='<div class="pr" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;'+active+'">'+
+          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+plKoodi+(plSelite?' '+plSelite:'')+'">'+plLabel+'</span>'+
+          '<span style="white-space:nowrap;color:#2d5fa6;flex-shrink:0">'+eur(plSum)+
           ' <small style="color:#999">'+plPct+'%</small></span></div>';
       }
       if(plLista.length>5)
-        plHtml+='<div class="pr" style="color:#999">...ja '+(plLista.length-5)+' muuta</div>';
+        plHtml+='<div class="pr" style="color:#999">...ja '+(plLista.length-5)+' muuta palveluluokkaa</div>';
     }
     m.bindPopup(
       '<div class="pn">'+(d.nimi||'–')+'</div>'+
