@@ -292,7 +292,13 @@ function redraw(){
       '<div style="margin-top:5px"><span class="pt" style="background:'+d.ta.color+'">'+d.ta.key+'</span></div>',
       {maxWidth:320}
     );
-    cg.addLayer(m);
+    var clustered=document.getElementById('tog-cl').checked;
+    if(clustered){
+      cg.addLayer(m);
+    } else {
+      d._marker=m;
+      m.addTo(map);
+    }
   }
   var gl=0;for(var j=0;j<allData.length;j++)if(allData[j].coords)gl++;
   sset('p-nyt', nakyy+' kartalla');
@@ -354,8 +360,21 @@ window.addEventListener('load',function(){
   document.getElementById('sel-ta').addEventListener('change',function(){syncFilters('sel-ta');});
   document.getElementById('sel-min').addEventListener('change',function(){syncFilters('sel-min');});
   document.getElementById('tog-cl').addEventListener('change',function(){
-    if(this.checked){map.addLayer(cg);}
-    else{map.removeLayer(cg);var ls=cg.getLayers();for(var i=0;i<ls.length;i++)map.addLayer(ls[i]);}
+    var on=this.checked;
+    document.getElementById('tog-cl-m').checked=on;
+    // Poistetaan kaikki pisteet kartalta ensin
+    map.removeLayer(cg);
+    cg.clearLayers();
+    allData.forEach(function(d){if(d._marker)map.removeLayer(d._marker);delete d._marker;});
+    if(on){
+      // Klusterointi päälle — lisätään cg takaisin ja piirretään uudelleen
+      map.addLayer(cg);
+    }
+    redraw();
+  });
+  document.getElementById('tog-cl-m').addEventListener('change',function(){
+    document.getElementById('tog-cl').checked=this.checked;
+    document.getElementById('tog-cl').dispatchEvent(new Event('change'));
   });
 
   // Kokeillaan ensin yritykset.json (toimii GitHub Pagesissa ja localhostissa)
