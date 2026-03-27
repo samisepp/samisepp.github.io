@@ -136,7 +136,7 @@ select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-ra
           = laskun koko
         </div>
       </div>
-      <div style="margin-top:auto;font-size:10px;color:#bbb;line-height:1.7">PRH + Photon ~2 min.<br>CC BY 4.0 · Salon kaupunki</div>
+      <div style="margin-top:auto;font-size:10px;color:#bbb;line-height:1.7"><div id="status-txt">⏳ Haetaan tietoja...</div>CC BY 4.0 · Salon kaupunki</div>
       <div>
         <div class="sb-t">Debug-loki</div>
         <div id="dbg" style="font-size:10px;font-family:monospace;color:#555;line-height:1.8;max-height:200px;overflow-y:auto;"></div>
@@ -242,22 +242,43 @@ function aggregate(rows){
 }
 
 async function fetchPRH(yid){
-  if(prhC[yid]!==undefined)return prhC[yid];
-  try{
-    var ac1=new AbortController();setTimeout(function(){ac1.abort();},5000);
-    var r=await fetch('https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId='+encodeURIComponent(yid),{signal:ac1.signal});
-    if(!r.ok){prhC[yid]=null;return null;}
-    var d=await r.json();var c=d.results&&d.results[0];
-    if(!c){prhC[yid]=null;return null;}
-    var addr=null;
-    if(c.addresses){for(var i=0;i<c.addresses.length;i++){if(c.addresses[i].type===2){addr=c.addresses[i];break;}}if(!addr&&c.addresses.length)addr=c.addresses[0];}
-    var st=(addr&&addr.street)||'',po=(addr&&addr.postCode)||'',ci='';
-    if(addr&&addr.postOffices&&addr.postOffices.length){for(var j=0;j<addr.postOffices.length;j++){if(addr.postOffices[j].languageCode==='FI'){ci=addr.postOffices[j].postOffice;break;}}if(!ci)ci=addr.postOffices[0].postOffice||'';}
-    var os=[st,po,ci].filter(Boolean).join(', ');
-    var ta='';if(c.mainBusinessLine&&c.mainBusinessLine.descriptions){for(var k=0;k<c.mainBusinessLine.descriptions.length;k++){if(c.mainBusinessLine.descriptions[k].languageCode==='FI'){ta=c.mainBusinessLine.descriptions[k].description;break;}}}
-    prhC[yid]={nimi:(c.names&&c.names[0]&&c.names[0].name)||'',osoite:os,ta:ta};
-  }catch(e){prhC[yid]=null; dbg('PRH virhe '+yid+': '+e.message, false);}
-  return prhC[yid];
+  if(prhC[yid]!==undefined) return prhC[yid];
+  var prh_url='https://avoindata.prh.fi/opendata-ytj-api/v3/companies?businessId='+encodeURIComponent(yid);
+  var proxyt=[
+    'https://corsproxy.io/?'+encodeURIComponent(prh_url),
+    'https://api.allorigins.win/get?url='+encodeURIComponent(prh_url)
+  ];
+  for(var p=0;p<proxyt.length;p++){
+    try{
+      var ac=new AbortController();setTimeout(function(){ac.abort();},8000);
+      var r=await fetch(proxyt[p],{signal:ac.signal});
+      if(!r.ok) continue;
+      var raw=await r.json();
+      // allorigins palauttaa {contents:"..."}, corsproxy palauttaa suoraan
+      var d=raw.contents?JSON.parse(raw.contents):raw;
+      var co=d.results&&d.results[0];
+      if(!co){prhC[yid]=null;return null;}
+      var addr=null;
+      if(co.addresses){for(var i=0;i<co.addresses.length;i++){if(co.addresses[i].type===2){addr=co.addresses[i];break;}}if(!addr&&co.addresses.length)addr=co.addresses[0];}
+      var st=(addr&&addr.street)||'';
+      var po=(addr&&addr.postCode)||'';
+      var ci='';
+      if(addr&&addr.postOffices&&addr.postOffices.length){
+        for(var j=0;j<addr.postOffices.length;j++){if(addr.postOffices[j].languageCode==='FI'){ci=addr.postOffices[j].postOffice;break;}}
+        if(!ci)ci=addr.postOffices[0].postOffice||'';
+      }
+      var os=[st,po,ci].filter(Boolean).join(', ');
+      var ta='';
+      if(co.mainBusinessLine&&co.mainBusinessLine.descriptions){
+        for(var k=0;k<co.mainBusinessLine.descriptions.length;k++){if(co.mainBusinessLine.descriptions[k].languageCode==='FI'){ta=co.mainBusinessLine.descriptions[k].description;break;}}
+      }
+      prhC[yid]={nimi:(co.names&&co.names[0]&&co.names[0].name)||'',osoite:os,ta:ta};
+      return prhC[yid];
+    }catch(e){}
+  }
+  dbg('PRH ei vastaa: '+yid, false);
+  prhC[yid]=null;
+  return null;
 }
 
 async function geocode(os){
@@ -265,7 +286,7 @@ async function geocode(os){
   if(geoC[os]!==undefined)return geoC[os];
   try{
     var ac2=new AbortController();setTimeout(function(){ac2.abort();},5000);
-    var r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(os+' Finland')+'&limit=1&lang=fi&bbox=19.0,59.5,32.0,70.5',{signal:ac2.signal});
+    var r=await fetch('https://photon.komoot.io/api/?q='+encodeURIComponent(os)+'&limit=1&lang=fi',{signal:ac2.signal});
     var d=await r.json();
     if(d.features&&d.features.length){var c=d.features[0].geometry.coordinates;geoC[os]={lat:c[1],lng:c[0]};return geoC[os];}
   }catch(e){}
@@ -293,11 +314,13 @@ async function fetchAll(yrit){
     pct(18+Math.round((i+1)/ko.length*78));
     msg('Haetaan osoitteita... '+(i+1)+'/'+ko.length,geo+' paikannettu');
     document.getElementById('p-geo').textContent=geo+' paikannettu';
-    document.getElementById('info-txt').textContent='Haetaan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua · kartta päivittyy...';
+    document.getElementById('info-txt').textContent='Haetaan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua';
+    var stxt=document.getElementById('status-txt');if(stxt)stxt.textContent='⏳ '+(i+1)+'/'+ko.length+' haettu, '+geo+' kartalla';
     buildLegend();redraw();
     await new Promise(function(r){setTimeout(r,350);});
   }
   dbg('Valmis: '+geo+'/'+ko.length+' paikannettua', geo>0);
+  var stxt=document.getElementById('status-txt');if(stxt)stxt.textContent='✓ Valmis: '+geo+' yritystä kartalla';
   pct(100);
 }
 
