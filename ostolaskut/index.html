@@ -459,8 +459,8 @@ function renderDrop(osumat, q){
     drop.innerHTML='<div class="sd-empty">Ei tuloksia</div>';
   } else {
     drop.innerHTML = osumat.map(function(d){
-      var hl = d.nimi.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\]/g,'\$&')+')','gi'),
-               '<mark style="background:#fff3cd;border-radius:2px;">$1</mark>');
+      var qi=d.nimi.toLowerCase().indexOf(q);
+      var hl=qi>=0?d.nimi.slice(0,qi)+'<mark style="background:#fff3cd;border-radius:2px;">'+d.nimi.slice(qi,qi+q.length)+'</mark>'+d.nimi.slice(qi+q.length):d.nimi;
       return '<div class="sd-item" role="option" tabindex="-1" data-yid="'+d.yid+'">'+
              '<span class="sd-name">'+hl+'</span>'+
              '<span class="sd-sum">'+eur(d.sum)+'</span></div>';
