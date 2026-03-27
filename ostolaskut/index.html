@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Salon kaupungin ostolaskut 2024</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -122,10 +125,6 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
       <select id="sel-ta-m"><option value="">Kaikki</option></select>
     </div>
     <div class="sheet-section">
-      <div class="sheet-label">Palveluluokka</div>
-      <select id="sel-pl-m"><option value="">Kaikki</option></select>
-    </div>
-    <div class="sheet-section">
       <div class="sheet-label">Minimisumma</div>
       <select id="sel-min-m">
         <option value="0">Kaikki</option>
@@ -163,7 +162,6 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
   <div id="body">
     <div id="sidebar">
       <div><div class="sb-t">Toimiala (PRH)</div><select id="sel-ta"><option value="">Kaikki</option></select></div>
-      <div><div class="sb-t">Palveluluokka</div><select id="sel-pl"><option value="">Kaikki</option></select></div>
       <div>
         <div class="sb-t">Minimisumma</div>
         <select id="sel-min">
@@ -205,8 +203,7 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
         <span style="color:#bbb;font-size:9px">Photon/Komoot · CC BY 4.0</span><br>
         <a href="https://www.openstreetmap.org" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">🗺️ Taustakartta</a>
         <span style="color:#bbb;font-size:9px">OpenStreetMap · ODbL · &copy; CARTO</span><br>
-        <a href="https://www.avoindata.fi/data/fi/dataset/jhs-200-kuntien-ja-kuntayhtymien-palveluluokitus" target="_blank" style="color:#2d5fa6;text-decoration:none;display:block;margin-top:3px;">📋 JHS 200 Palveluluokitus</a>
-        <span style="color:#bbb;font-size:9px">Valtiovarainministeriö · CC BY 4.0</span>
+
       </div>
       <div>
         <div class="sb-t">Debug</div>
@@ -262,38 +259,6 @@ var TOIMIALAT=[
   {key:'Muu',                  color:'#546e7a',words:[]}
 ];
 
-var JHS200={
-  "100":"Yleishallinto","110":"Kuntajohtaminen","111":"Poliittinen päätöksenteko",
-  "112":"Kuntastrategia ja johtaminen","120":"Tukipalvelut","121":"Talous- ja henkilöstöhallinto",
-  "122":"Tietohallinto ja digitalisaatio","123":"Viestintä ja markkinointi","124":"Lakipalvelut",
-  "125":"Kiinteistöhallinto","130":"Turvallisuus ja valvonta","200":"Elinvoima ja ympäristö",
-  "210":"Elinkeinot ja yrittäjyys","211":"Elinkeinopolitiikka ja yrityspalvelut",
-  "212":"Maankäyttö ja kaavoitus","213":"Rakentamisen luvat ja valvonta",
-  "220":"Ympäristö ja luonnonvarat","221":"Ympäristönsuojelu","222":"Jätehuolto",
-  "223":"Vesihuolto","224":"Energiahuolto","230":"Liikenne ja infrastruktuuri",
-  "231":"Katujen ja teiden ylläpito","232":"Joukkoliikenne","233":"Pysäköinti",
-  "300":"Sivistys","301":"Varhaiskasvatus","3011":"Päiväkotitoiminta",
-  "3012":"Perhepäivähoito","3013":"Muu varhaiskasvatus","302":"Perusopetus",
-  "3021":"Alakoulu","3022":"Yläkoulu","3023":"Erityisopetus","3024":"Aamu- ja iltapäivätoiminta",
-  "303":"Lukiokoulutus","304":"Ammatillinen koulutus","305":"Vapaa sivistystyö",
-  "3051":"Kansalaisopisto","3052":"Kansanopisto","306":"Kirjasto","307":"Kulttuuri",
-  "3071":"Kulttuuripalvelut","3072":"Museot","3073":"Teatteri ja orkesteri",
-  "308":"Liikunta","3081":"Liikuntapaikat","3082":"Liikuntapalvelut",
-  "309":"Nuorisopalvelut","310":"Kotoutuminen","320":"Sosiaali- ja terveyspalvelut",
-  "321":"Sosiaalityö","322":"Lapsiperheiden palvelut","3221":"Lastensuojelu",
-  "3222":"Perhetyö","323":"Vammaispalvelut","3231":"Vaikeavammaisten palvelut",
-  "3232":"Kehitysvammapalvelut","324":"Ikääntyneiden palvelut","3241":"Kotihoito",
-  "3242":"Asumispalvelut ikääntyneille","3243":"Laitoshoito",
-  "325":"Mielenterveys- ja päihdepalvelut","3251":"Mielenterveyspalvelut",
-  "3252":"Päihdepalvelut","326":"Terveyspalvelut","3261":"Perusterveydenhuolto",
-  "3262":"Suun terveydenhuolto","3263":"Mielenterveys ja psykiatria",
-  "327":"Toimeentulotuki","328":"Asumispalvelut","400":"Maankäyttö ja rakentaminen",
-  "410":"Kaavoitus","420":"Tonttituotanto","430":"Rakentaminen",
-  "500":"Tekninen toimi","510":"Yhdyskuntatekniikka","520":"Rakennuttaminen",
-  "530":"Tilapalvelut","3501":"Perusopetuksen kuljetus","3502":"Varhaiskasvatuksen kuljetus",
-  "3503":"Vammaispalvelujen kuljetus","3504":"Ikääntyneiden kuljetus"
-};
-function jhs(koodi){ var k=String(koodi).trim(); return JHS200[k]||null; }
 function getTa(s){if(s){var l=s.toLowerCase();for(var i=0;i<TOIMIALAT.length-1;i++){for(var j=0;j<TOIMIALAT[i].words.length;j++){if(l.indexOf(TOIMIALAT[i].words[j])!==-1)return TOIMIALAT[i];}}}return TOIMIALAT[TOIMIALAT.length-1];}
 function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
 function eur(n){return n.toLocaleString('fi-FI',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
@@ -347,45 +312,18 @@ function redraw(){
   cg.clearLayers();
   var minSum=parseFloat(document.getElementById('sel-min').value)||0;
   var selTa=document.getElementById('sel-ta').value;
-  var selPl=document.getElementById('sel-pl').value;
   var nakyy=0;
   for(var i=0;i<allData.length;i++){
     var d=allData[i];
     if(!d.coords)continue;
-    // Jos palveluluokka valittu, käytä sen summaa pisteen kokoon
-    var naytSumma=d.sum;
-    if(selPl){
-      naytSumma=(d.palvluokat&&d.palvluokat[selPl])||0;
-      if(naytSumma===0)continue;
-    }
-    if(naytSumma<minSum)continue;
+    if(d.sum<minSum)continue;
     if(selTa&&d.ta.key!==selTa)continue;
     if(!activeKeys[d.ta.key])continue;
     nakyy++;
     var m=L.circleMarker([d.coords.lat,d.coords.lng],{
-      radius:getR(naytSumma),fillColor:d.ta.color,
+      radius:getR(d.sum),fillColor:d.ta.color,
       color:'#fff',weight:1.5,fillOpacity:.78,opacity:1
     });
-    // Palveluluokkaerittely popupiin
-    var plHtml='';
-    if(d.palvluokat){
-      var plLista=Object.keys(d.palvluokat);
-      var nayta=Math.min(plLista.length,5);
-      for(var j=0;j<nayta;j++){
-        var plNimi=plLista[j];
-        var plSum=d.palvluokat[plNimi];
-        var plPct=d.sum>0?Math.round(plSum/d.sum*100):0;
-        var active=selPl===plNimi?'font-weight:600;':'';
-        var plSelite=jhs(plNimi);
-        var plLabel=plSelite?plNimi+' '+plSelite:plNimi;
-        plHtml+='<div class="pr" style="display:flex;justify-content:space-between;gap:8px;'+active+'">'+
-          '<span>'+plLabel+'</span>'+
-          '<span style="white-space:nowrap;color:#2d5fa6">'+eur(plSum)+
-          ' <small style="color:#999">'+plPct+'%</small></span></div>';
-      }
-      if(plLista.length>5)
-        plHtml+='<div class="pr" style="color:#999">...ja '+(plLista.length-5)+' muuta</div>';
-    }
     m.bindPopup(
       '<div class="pn">'+(d.nimi||'–')+'</div>'+
       '<div class="pr">Y-tunnus: '+d.yid+'</div>'+
@@ -393,10 +331,7 @@ function redraw(){
       '<div class="pr">Osoite: '+(d.osoite||'–')+'</div>'+
       '<div class="pr">Laskuja: '+d.lkm+' kpl</div>'+
       '<div class="ps">Yhteensä: '+eur(d.sum)+'</div>'+
-      (plHtml?
-        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee">'+
-        '<div style="font-size:11px;color:#999;margin-bottom:4px">Palveluluokittain:</div>'+
-        plHtml+'</div>':'')+
+
       '<div style="margin-top:5px"><span class="pt" style="background:'+d.ta.color+'">'+d.ta.key+'</span></div>',
       {maxWidth:320}
     );
@@ -426,7 +361,7 @@ function buildLegend(){
   if(cv)sl.value=cv;
 
   // Kopioidaan desktop-valikot mobiiliin
-  [['sel-ta','sel-ta-m'],['sel-pl','sel-pl-m']].forEach(function(p){
+  [['sel-ta','sel-ta-m']].forEach(function(p){
     var src=document.getElementById(p[0]);
     var dst=document.getElementById(p[1]);
     if(!src||!dst)return;
@@ -442,7 +377,7 @@ function closeSheet(){ document.getElementById('filter-sheet').classList.remove(
 
 // Synkronoi desktop- ja mobiilisuodattimet
 function syncFilters(src){
-  var pairs=[['sel-ta','sel-ta-m'],['sel-pl','sel-pl-m'],['sel-min','sel-min-m']];
+  var pairs=[['sel-ta','sel-ta-m'],['sel-min','sel-min-m']];
   pairs.forEach(function(p){
     var other=src===p[0]?p[1]:p[0];
     var el=document.getElementById(other);
@@ -472,6 +407,8 @@ window.addEventListener('load',function(){
 });
 
 async function tryLataaJSON(){
+  // Ladataan ensin palveluluokkanimet jos saatavilla
+
   try{
     var r=await fetch('yritykset.json');
     if(r.ok){
