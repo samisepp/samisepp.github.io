@@ -137,6 +137,10 @@ select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-ra
         </div>
       </div>
       <div style="margin-top:auto;font-size:10px;color:#bbb;line-height:1.7">PRH + Photon ~2 min.<br>CC BY 4.0 · Salon kaupunki</div>
+      <div>
+        <div class="sb-t">Debug-loki</div>
+        <div id="dbg" style="font-size:10px;font-family:monospace;color:#555;line-height:1.8;max-height:200px;overflow-y:auto;"></div>
+      </div>
     </div>
     <div id="map"></div>
   </div>
@@ -147,6 +151,16 @@ select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-ra
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+function dbg(msg, ok) {
+  var el = document.getElementById('dbg');
+  if (!el) return;
+  var d = document.createElement('div');
+  d.style.color = ok === false ? '#c0392b' : ok === true ? '#27ae60' : '#888';
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
 var LOCAL_NIMET=['ostolaskut2024.xlsx','salon-kaupungin-ostolaskut-ajalta-1.1.-31.12.2024.xlsx','ostolaskut.xlsx'];
 var TOIMIALAT=[
   {key:'Rakentaminen',         color:'#c0392b',words:['rakennus','rakentami','maarakennus','purkaminen','talonrakennus']},
@@ -198,6 +212,11 @@ function kasiBuf(buf){
       var tot=0;for(var i=0;i<yrit.length;i++)tot+=yrit[i].sum;
       document.getElementById('p-yrit').textContent=yrit.length+' yritystä';
       document.getElementById('p-sum').textContent=eur(tot);
+      dbg('Excel OK: '+rows.length+' riviä, '+yrit.length+' yritystä', true);
+      if(yrit.length>0) {
+        dbg('Sarakkeet: '+Object.keys(rows[0]).slice(0,5).join(', '));
+        dbg('Esim Y-tunnus: '+yrit[0].yid+' sum: '+Math.round(yrit[0].sum));
+      }
       pct(18);
       fetchAll(yrit);
     }catch(e){msg('Virhe: '+e.message);}
@@ -236,7 +255,7 @@ async function fetchPRH(yid){
     var os=[st,po,ci].filter(Boolean).join(', ');
     var ta='';if(c.mainBusinessLine&&c.mainBusinessLine.descriptions){for(var k=0;k<c.mainBusinessLine.descriptions.length;k++){if(c.mainBusinessLine.descriptions[k].languageCode==='FI'){ta=c.mainBusinessLine.descriptions[k].description;break;}}}
     prhC[yid]={nimi:(c.names&&c.names[0]&&c.names[0].name)||'',osoite:os,ta:ta};
-  }catch(e){prhC[yid]=null;}
+  }catch(e){prhC[yid]=null; dbg('PRH virhe '+yid+': '+e.message, false);}
   return prhC[yid];
 }
 
@@ -261,12 +280,20 @@ async function fetchAll(yrit){
     y.ta=getTa(y.taStr);
     if(y.osoite){y.coords=await geocode(y.osoite);if(y.coords)geo++;}
     allData.push(y);
+    // Debug ensimmäiset 3
+    if(i<3) {
+      dbg('['+(i+1)+'] '+y.yid+' osoite='+(y.osoite||'EI')+' coords='+(y.coords?'OK':'EI'), !!y.coords);
+    }
+    if(i===0 && !y.coords) {
+      dbg('PRH tulos: '+(prhC[y.yid]?JSON.stringify(prhC[y.yid]).slice(0,80):'null'), false);
+    }
     pct(18+Math.round((i+1)/ko.length*78));
     msg('Haetaan osoitteita... '+(i+1)+'/'+ko.length,geo+' paikannettu');
     document.getElementById('p-geo').textContent=geo+' paikannettu';
     buildLegend();redraw();
     await new Promise(function(r){setTimeout(r,350);});
   }
+  dbg('Valmis: '+geo+'/'+ko.length+' paikannettua', geo>0);
   pct(100);
   document.getElementById('load-view').classList.remove('show');
 }
