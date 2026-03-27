@@ -67,11 +67,11 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
 #search-clear.show{display:block;}
 #search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;max-height:260px;overflow-y:auto;display:none;}
 #search-dropdown.open{display:block;}
-.sd-item{padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.sd-item{padding:7px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5;display:flex;flex-direction:column;gap:2px;}
 .sd-item:last-child{border-bottom:none;}
 .sd-item:hover,.sd-item.active{background:#f0f6ff;}
-.sd-name{font-weight:600;color:#1a1916;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.sd-sum{font-size:11px;color:#2d5fa6;white-space:nowrap;}
+.sd-name{font-weight:600;color:#1a1916;word-break:break-word;}
+.sd-sum{font-size:11px;color:#2d5fa6;}
 .sd-empty{padding:10px 12px;font-size:12px;color:#aaa;text-align:center;}
 @media(max-width:700px){
   #search-input{width:130px;}
@@ -139,6 +139,8 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
       <input id="search-input-m" type="search" placeholder="Kirjoita nimi..."
              aria-label="Hae yritystä nimellä"
              style="width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f7f5;">
+      <div id="search-dropdown-m" role="listbox" aria-label="Hakutulokset"
+           style="background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;display:none;margin-top:4px;"></div>
     </div>
   </div>
   <div class="sheet-grid">
@@ -524,9 +526,30 @@ window.addEventListener('load',function(){
   // Mobiilihaku synkronoidaan desktop-hakuun
   var sinpM=document.getElementById('search-input-m');
   if(sinpM) sinpM.addEventListener('input',function(){
-    var sinp=document.getElementById('search-input');
-    if(sinp) sinp.value=this.value;
-    sinp && sinp.dispatchEvent(new Event('input'));
+    var q=this.value.trim().toLowerCase();
+    var dropM=document.getElementById('search-dropdown-m');
+    if(q.length<2){ dropM.style.display='none'; searchActive=null; redraw(); return; }
+    var osumat=allData.filter(function(d){
+      return d.nimi&&d.nimi.toLowerCase().includes(q);
+    }).sort(function(a,b){return b.sum-a.sum;}).slice(0,8);
+    if(!osumat.length){
+      dropM.innerHTML='<div class="sd-empty">Ei tuloksia</div>';
+    } else {
+      dropM.innerHTML=osumat.map(function(d){
+        var qi=d.nimi.toLowerCase().indexOf(q);
+        var hl=qi>=0?d.nimi.slice(0,qi)+'<mark style="background:#fff3cd;border-radius:2px;">'+d.nimi.slice(qi,qi+q.length)+'</mark>'+d.nimi.slice(qi+q.length):d.nimi;
+        return '<div class="sd-item" data-yid="'+d.yid+'"><span class="sd-name">'+hl+'</span><span class="sd-sum">'+eur(d.sum)+'</span></div>';
+      }).join('');
+      dropM.querySelectorAll('.sd-item').forEach(function(el){
+        el.addEventListener('click',function(){
+          sinpM.value=allData.find(function(x){return x.yid===this.dataset.yid;},this).nimi;
+          dropM.style.display='none';
+          valitseYritys(this.dataset.yid);
+          closeSheet();
+        });
+      });
+    }
+    dropM.style.display='block';
   });
   document.getElementById('tog-cl').addEventListener('change',function(){
     var on=this.checked;
