@@ -351,34 +351,9 @@ function redraw(){
     if(!activeKeys[d.ta.key])continue;
     nakyy++;
     var m=L.circleMarker([d.coords.lat,d.coords.lng],{
-      radius:getR(naytSumma),fillColor:d.ta.color,
+      radius:getR(d.sum),fillColor:d.ta.color,
       color:'#fff',weight:1.5,fillOpacity:.78,opacity:1
     });
-    // Palveluluokkaerittely popupiin
-    var plHtml='';
-    if(d.palvluokat){
-      // Järjestetään summan mukaan suurimmasta pienimpään
-      var plLista=Object.keys(d.palvluokat).sort(function(a,b){
-        return d.palvluokat[b]-d.palvluokat[a];
-      });
-      var nayta=Math.min(plLista.length,5);
-      for(var j=0;j<nayta;j++){
-        var plNimi=plLista[j];
-        var plSum=d.palvluokat[plNimi];
-        var plPct=d.sum>0?Math.round(plSum/d.sum*100):0;
-        var active=selPl===plNimi?'font-weight:600;':'';
-        var plKoodi=String(plNimi).trim();
-        // Käytetään ensin datasta saatua nimeä, sitten JHS200-lookuppia
-        var plSelite=(d.palvluokat_nimet&&d.palvluokat_nimet[plKoodi])||JHS200[plKoodi]||null;
-        var plLabel=plSelite?'<strong>'+plKoodi+'</strong> '+plSelite:plKoodi;
-        plHtml+='<div class="pr" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;'+active+'">'+
-          '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+plKoodi+(plSelite?' '+plSelite:'')+'">'+plLabel+'</span>'+
-          '<span style="white-space:nowrap;color:#2d5fa6;flex-shrink:0">'+eur(plSum)+
-          ' <small style="color:#999">'+plPct+'%</small></span></div>';
-      }
-      if(plLista.length>5)
-        plHtml+='<div class="pr" style="color:#999">...ja '+(plLista.length-5)+' muuta palveluluokkaa</div>';
-    }
     m.bindPopup(
       '<div class="pn">'+(d.nimi||'–')+'</div>'+
       '<div class="pr">Y-tunnus: '+d.yid+'</div>'+
