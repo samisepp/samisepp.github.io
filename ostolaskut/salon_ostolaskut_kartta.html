@@ -429,22 +429,26 @@ async function tryLataaJSON(){
         document.getElementById('p-sum').textContent=eur(totalSum);
         msg('Käsitellään toimittajatietoja...', json.length+' yritystä · '+eur(totalSum)+' yhteensä');
         pct(30);
-        for(var i=0;i<json.length;i++){
-          var y=json[i];
-          y.ta=getTa(y.ta||'');
-          if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
-          allData.push(y);
-        }
-        var geo=allData.filter(function(d){return d.coords;}).length;
-        document.getElementById('p-geo').textContent=geo+' paikannettu';
-        dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
-        msg('Piirretään karttaa...', 'Paikannettu '+geo+' yritystä kartalle');
-        pct(80);
-        buildLegend();
-        redraw();
-        pct(100);
-        msg('Valmis!', '');
-        setTimeout(function(){ document.getElementById('load-view').classList.remove('show'); }, 400);
+        setTimeout(function(){
+          for(var i=0;i<json.length;i++){
+            var y=json[i];
+            y.ta=getTa(y.ta||'');
+            if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
+            allData.push(y);
+          }
+          var geo=allData.filter(function(d){return d.coords;}).length;
+          document.getElementById('p-geo').textContent=geo+' paikannettu';
+          dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
+          msg('Piirretään karttaa...', 'Paikannettu '+geo+' yritystä kartalle');
+          pct(80);
+          setTimeout(function(){
+            buildLegend();
+            redraw();
+            pct(100);
+            msg('Valmis!', '');
+            setTimeout(function(){ document.getElementById('load-view').classList.remove('show'); }, 500);
+          }, 50);
+        }, 50);
         return;
       }
     }
