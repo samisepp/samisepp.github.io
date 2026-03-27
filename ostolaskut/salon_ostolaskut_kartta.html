@@ -42,6 +42,18 @@ html,body{height:100%;font-family:Arial,sans-serif;font-size:14px;}
 #pbar{height:3px;background:#e0ddd8;flex-shrink:0;}
 #pbar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
 #body{display:flex;flex:1;overflow:hidden;}
+@media(max-width:640px){
+  #body{flex-direction:column;}
+  #sidebar{width:100%;height:auto;max-height:220px;border-right:none;border-bottom:1px solid #ddd;flex-direction:row;flex-wrap:wrap;padding:8px;gap:8px;overflow-y:auto;}
+  #sidebar>div{min-width:140px;flex:1;}
+  #sidebar .tog-row{font-size:12px;}
+  #topbar{height:auto;min-height:44px;padding:8px 12px;flex-wrap:wrap;gap:6px;}
+  #topbar h1{font-size:13px;}
+  .pill{font-size:11px;padding:2px 8px;}
+  #infobar{font-size:10px;}
+  #leg{flex-direction:row;flex-wrap:wrap;gap:6px;}
+  .lr{font-size:11px;}
+}
 #sidebar{width:210px;flex-shrink:0;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;overflow-y:auto;padding:12px;gap:14px;}
 .sb-t{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#999;margin-bottom:6px;}
 select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;background:#f8f7f5;color:#1a1916;}
@@ -58,7 +70,7 @@ select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-ra
 .lr.dim{opacity:.3;}
 .ld{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
 .leg-sz{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:#999;}
-#map{flex:1;}
+#map{flex:1;min-height:300px;}
 #infobar{height:26px;background:#fff;border-top:1px solid #ddd;display:flex;align-items:center;padding:0 16px;font-size:11px;color:#888;flex-shrink:0;}
 .pn{font-weight:600;font-size:13px;margin-bottom:5px;}
 .pr{font-size:12px;color:#666;margin:2px 0;}
@@ -110,7 +122,8 @@ select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-ra
   <div id="pbar"><div id="pbar-in"></div></div>
   <div id="body">
     <div id="sidebar">
-      <div><div class="sb-t">Toimiala</div><select id="sel-ta"><option value="">Kaikki</option></select></div>
+      <div><div class="sb-t">Toimiala (PRH)</div><select id="sel-ta"><option value="">Kaikki</option></select></div>
+      <div><div class="sb-t">Palveluluokka</div><select id="sel-pl"><option value="">Kaikki</option></select></div>
       <div>
         <div class="sb-t">Minimisumma</div>
         <select id="sel-min">
@@ -132,8 +145,8 @@ select{width:100%;font-size:13px;padding:6px 8px;border:1px solid #ddd;border-ra
         <div class="sb-t">Legenda <span style="font-size:10px;color:#bbb">(klikkaa)</span></div>
         <div id="leg"></div>
         <div class="leg-sz">
-          <svg width="50" height="14"><circle cx="5" cy="7" r="3" fill="#888" opacity=".6"/><circle cx="19" cy="7" r="5" fill="#888" opacity=".6"/><circle cx="36" cy="7" r="7" fill="#888" opacity=".6"/></svg>
-          = laskun koko
+          <svg width="50" height="14"><circle cx="5" cy="7" r="3" fill="#888" opacity=".6"/><circle cx="19" cy="7" r="5" fill="#546e7a" opacity=".9"/><circle cx="36" cy="7" r="7" fill="#546e7a" opacity=".9"/></svg>
+          = laskun euromäärä
         </div>
       </div>
       <div style="margin-top:auto;font-size:10px;color:#bbb;line-height:1.7"><div id="status-txt">⏳ Haetaan tietoja...</div>CC BY 4.0 · Salon kaupunki</div>
@@ -173,7 +186,7 @@ var TOIMIALAT=[
   {key:'IT ja viestintä',      color:'#2c3e50',words:['tietojenkäsittely','ohjelmisto','it-','ict','tietoliikenne']},
   {key:'Energia ja vesi',      color:'#f39c12',words:['energia','sähkö','lämpö','vesi','jäte','ympäristö']},
   {key:'Hallinto',             color:'#7f8c8d',words:['hallinto','julkinen','lakiasiain','tili','henkilöstö','konsultointi']},
-  {key:'Muu',                  color:'#95a5a6',words:[]}
+  {key:'Muu',                  color:'#546e7a',words:[]}
 ];
 function getTa(s){if(s){var l=s.toLowerCase();for(var i=0;i<TOIMIALAT.length-1;i++){for(var j=0;j<TOIMIALAT[i].words.length;j++){if(l.indexOf(TOIMIALAT[i].words[j])!==-1)return TOIMIALAT[i];}}}return TOIMIALAT[TOIMIALAT.length-1];}
 function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
@@ -302,23 +315,66 @@ async function fetchAll(yrit){
 function redraw(){
   if(!cg)return;
   cg.clearLayers();
-  var ms=parseFloat(document.getElementById('sel-min').value)||0;
-  var st=document.getElementById('sel-ta').value;
-  var n=0;
+  var minSum=parseFloat(document.getElementById('sel-min').value)||0;
+  var selTa=document.getElementById('sel-ta').value;
+  var selPl=document.getElementById('sel-pl').value;
+  var nakyy=0;
   for(var i=0;i<allData.length;i++){
     var d=allData[i];
-    if(!d.coords||d.sum<ms)continue;
-    if(st&&d.ta.key!==st)continue;
+    if(!d.coords)continue;
+    // Jos palveluluokka valittu, käytä sen summaa pisteen kokoon
+    var naytSumma=d.sum;
+    if(selPl){
+      naytSumma=(d.palvluokat&&d.palvluokat[selPl])||0;
+      if(naytSumma===0)continue;
+    }
+    if(naytSumma<minSum)continue;
+    if(selTa&&d.ta.key!==selTa)continue;
     if(!activeKeys[d.ta.key])continue;
-    n++;
-    var m=L.circleMarker([d.coords.lat,d.coords.lng],{radius:getR(d.sum),fillColor:d.ta.color,color:'#fff',weight:1.5,fillOpacity:.78,opacity:1});
-    m.bindPopup('<div class="pn">'+(d.nimi||'–')+'</div><div class="pr">Y-tunnus: '+d.yid+'</div><div class="pr">Toimiala: '+(d.taStr||'–')+'</div><div class="pr">Osoite: '+(d.osoite||'–')+'</div><div class="pr">Laskuja: '+d.lkm+' kpl</div><div class="ps">'+eur(d.sum)+'</div><div><span class="pt" style="background:'+d.ta.color+'">'+d.ta.key+'</span></div>',{maxWidth:280});
+    nakyy++;
+    var m=L.circleMarker([d.coords.lat,d.coords.lng],{
+      radius:getR(naytSumma),fillColor:d.ta.color,
+      color:'#fff',weight:1.5,fillOpacity:.78,opacity:1
+    });
+    // Palveluluokkaerittely popupiin
+    var plHtml='';
+    if(d.palvluokat){
+      var plLista=Object.keys(d.palvluokat);
+      var nayta=Math.min(plLista.length,5);
+      for(var j=0;j<nayta;j++){
+        var plNimi=plLista[j];
+        var plSum=d.palvluokat[plNimi];
+        var plPct=d.sum>0?Math.round(plSum/d.sum*100):0;
+        var active=selPl===plNimi?'font-weight:600;':'';
+        plHtml+='<div class="pr" style="display:flex;justify-content:space-between;gap:8px;'+active+'">'+
+          '<span>'+plNimi+'</span>'+
+          '<span style="white-space:nowrap;color:#2d5fa6">'+eur(plSum)+
+          ' <small style="color:#999">'+plPct+'%</small></span></div>';
+      }
+      if(plLista.length>5)
+        plHtml+='<div class="pr" style="color:#999">...ja '+(plLista.length-5)+' muuta</div>';
+    }
+    m.bindPopup(
+      '<div class="pn">'+(d.nimi||'–')+'</div>'+
+      '<div class="pr">Y-tunnus: '+d.yid+'</div>'+
+      '<div class="pr">Toimiala: '+(d.taStr||'–')+'</div>'+
+      '<div class="pr">Osoite: '+(d.osoite||'–')+'</div>'+
+      '<div class="pr">Laskuja: '+d.lkm+' kpl</div>'+
+      '<div class="ps">Yhteensä: '+eur(d.sum)+'</div>'+
+      (plHtml?
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee">'+
+        '<div style="font-size:11px;color:#999;margin-bottom:4px">Palveluluokittain:</div>'+
+        plHtml+'</div>':'')+
+      '<div style="margin-top:5px"><span class="pt" style="background:'+d.ta.color+'">'+d.ta.key+'</span></div>',
+      {maxWidth:320}
+    );
     cg.addLayer(m);
   }
   var gl=0;for(var j=0;j<allData.length;j++)if(allData[j].coords)gl++;
-  document.getElementById('p-nyt').textContent=n+' kartalla';
-  document.getElementById('info-txt').textContent=n+' näkyvissä · '+gl+' paikannettua';
+  document.getElementById('p-nyt').textContent=nakyy+' kartalla';
+  document.getElementById('info-txt').textContent=nakyy+' näkyvissä · '+gl+' paikannettua';
 }
+
 
 function buildLegend(){
   var pr={};for(var i=0;i<allData.length;i++)pr[allData[i].ta.key]=true;
