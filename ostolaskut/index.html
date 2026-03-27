@@ -65,7 +65,7 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
 #search-input:focus{border-color:#2d5fa6;width:220px;}
 #search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:0;display:none;line-height:1;}
 #search-clear.show{display:block;}
-#search-dropdown{position:absolute;top:calc(100% + 6px);left:0;min-width:260px;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;max-height:300px;overflow-y:auto;display:none;}
+#search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;max-height:260px;overflow-y:auto;display:none;}
 #search-dropdown.open{display:block;}
 .sd-item{padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center;gap:8px;}
 .sd-item:last-child{border-bottom:none;}
@@ -133,6 +133,14 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
 <!-- Bottom sheet suodattimet (mobiili) -->
 <div id="filter-sheet" role="dialog" aria-modal="true" aria-label="Suodattimet">
   <div id="sheet-handle"></div>
+  <div style="margin-bottom:12px;" role="search">
+    <div class="sheet-label">Hae yritystä</div>
+    <div style="position:relative;margin-top:4px;">
+      <input id="search-input-m" type="search" placeholder="Kirjoita nimi..."
+             aria-label="Hae yritystä nimellä"
+             style="width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f7f5;">
+    </div>
+  </div>
   <div class="sheet-grid">
     <div class="sheet-section">
       <div class="sheet-label">Toimiala (PRH)</div>
@@ -159,6 +167,26 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
       <div class="sheet-label">Toimialalegenda (klikkaa piilottaaksesi)</div>
       <div class="sheet-leg" id="sheet-leg"></div>
     </div>
+    <div class="sheet-section full" style="border-top:1px solid #f0ede8;padding-top:12px;margin-top:4px;">
+      <div class="sheet-label">Avoin data — lähteet</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+        <a href="https://avoindata.suomi.fi/data/dataset/36d08676-a7f9-4345-8ad3-028281ebc1cb" target="_blank" rel="noopener"
+           style="font-size:11px;color:#2d5fa6;text-decoration:none;background:#f0f6ff;border:1px solid #dde8fa;border-radius:20px;padding:3px 10px;white-space:nowrap;">
+          📊 Salon ostolaskut · CC BY 4.0</a>
+        <a href="https://avoindata.prh.fi" target="_blank" rel="noopener"
+           style="font-size:11px;color:#2d5fa6;text-decoration:none;background:#f0f6ff;border:1px solid #dde8fa;border-radius:20px;padding:3px 10px;white-space:nowrap;">
+          🏢 PRH / YTJ · CC BY 4.0</a>
+        <a href="https://yhdistysrekisteri.prh.fi" target="_blank" rel="noopener"
+           style="font-size:11px;color:#2d5fa6;text-decoration:none;background:#f0f6ff;border:1px solid #dde8fa;border-radius:20px;padding:3px 10px;white-space:nowrap;">
+          🤝 Yhdistysrekisteri · PRH</a>
+        <a href="https://photon.komoot.io" target="_blank" rel="noopener"
+           style="font-size:11px;color:#2d5fa6;text-decoration:none;background:#f0f6ff;border:1px solid #dde8fa;border-radius:20px;padding:3px 10px;white-space:nowrap;">
+          📍 Photon/Komoot · CC BY 4.0</a>
+        <a href="https://www.openstreetmap.org" target="_blank" rel="noopener"
+           style="font-size:11px;color:#2d5fa6;text-decoration:none;background:#f0f6ff;border:1px solid #dde8fa;border-radius:20px;padding:3px 10px;white-space:nowrap;">
+          🗺️ OpenStreetMap · ODbL</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -170,17 +198,22 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
     <span class="pill" id="p-sum">–</span>
     <span class="pill" id="p-geo">–</span><span class="pill" id="p-nyt">–</span>
     <div class="spacer"></div>
-    <div id="search-wrap" role="search">
-      <input id="search-input" type="search" placeholder="Hae yritystä..." autocomplete="off"
-             aria-label="Hae yritystä nimellä" aria-autocomplete="list" aria-controls="search-dropdown">
-      <button id="search-clear" aria-label="Tyhjennä haku">✕</button>
-      <div id="search-dropdown" role="listbox" aria-label="Hakutulokset"></div>
-    </div>
     <span style="font-size:10px;color:#ccc">CC BY 4.0</span>
   </div>
   <div id="pbar"><div id="pbar-in"></div></div>
   <div id="body">
     <div id="sidebar">
+      <div role="search">
+        <div class="sb-t">Hae yritystä</div>
+        <div id="search-wrap" style="position:relative;">
+          <input id="search-input" type="search" placeholder="Kirjoita nimi..." autocomplete="off"
+                 aria-label="Hae yritystä nimellä" aria-autocomplete="list" aria-controls="search-dropdown"
+                 style="width:100%;font-size:13px;padding:7px 28px 7px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f7f5;color:#1a1916;outline:none;">
+          <button id="search-clear" aria-label="Tyhjennä haku"
+                  style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:0;display:none;line-height:1;">✕</button>
+          <div id="search-dropdown" role="listbox" aria-label="Hakutulokset"></div>
+        </div>
+      </div>
       <div><div class="sb-t">Toimiala (PRH)</div><select id="sel-ta" aria-label="Suodata toimialan mukaan"><option value="">Kaikki</option></select></div>
       <div>
         <div class="sb-t">Minimisumma</div>
@@ -374,7 +407,8 @@ function syncFilters(src){
     if(el) el.value=val;
   });
   redraw();
-  closeSheet();
+  // Suljetaan sheet vain jos muutos tuli mobiilista
+  if(src.endsWith('-m')) closeSheet();
 }
 
 // ── Yrityshaku ─────────────────────────────────────────────────────────────
@@ -484,6 +518,16 @@ window.addEventListener('load',function(){
   map.addLayer(cg);
   document.getElementById('sel-ta').addEventListener('change',function(){syncFilters('sel-ta');});
   document.getElementById('sel-min').addEventListener('change',function(){syncFilters('sel-min');});
+  // Mobiilivalikot — omat event listenerit
+  document.getElementById('sel-ta-m').addEventListener('change',function(){syncFilters('sel-ta-m');});
+  document.getElementById('sel-min-m').addEventListener('change',function(){syncFilters('sel-min-m');});
+  // Mobiilihaku synkronoidaan desktop-hakuun
+  var sinpM=document.getElementById('search-input-m');
+  if(sinpM) sinpM.addEventListener('input',function(){
+    var sinp=document.getElementById('search-input');
+    if(sinp) sinp.value=this.value;
+    sinp && sinp.dispatchEvent(new Event('input'));
+  });
   document.getElementById('tog-cl').addEventListener('change',function(){
     var on=this.checked;
     document.getElementById('tog-cl-m').checked=on;
