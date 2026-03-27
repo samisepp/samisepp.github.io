@@ -351,13 +351,54 @@ window.addEventListener('load',function(){
     else{map.removeLayer(cg);var ls=cg.getLayers();for(var i=0;i<ls.length;i++)map.addLayer(ls[i]);}
   });
 
-  // Kokeillaan paikallista tiedostoa (toimii localhost-palvelimella)
+  // Kokeillaan ensin yritykset.json (toimii GitHub Pagesissa ja localhostissa)
+  // Jos ei löydy, näytetään Excel-latausnäkymä
+  tryLataaJSON();
+});
+
+async function tryLataaJSON(){
+  try{
+    var r=await fetch('yritykset.json');
+    if(r.ok){
+      var json=await r.json();
+      if(json&&json.length>0){
+        document.getElementById('upload-view').style.display='none';
+        document.getElementById('load-view').classList.add('show');
+        msg('Ladataan karttaa...');
+        pct(10);
+        // Alustetaan suoraan JSONista
+        var totalSum=0;
+        for(var i=0;i<json.length;i++) totalSum+=json[i].sum||0;
+        document.getElementById('p-yrit').textContent=json.length+' yritystä';
+        document.getElementById('p-sum').textContent=eur(totalSum);
+        for(var i=0;i<json.length;i++){
+          var y=json[i];
+          y.ta=getTa(y.ta||'');
+          if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
+          allData.push(y);
+        }
+        var geo=allData.filter(function(d){return d.coords;}).length;
+        document.getElementById('p-geo').textContent=geo+' paikannettu';
+        dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
+        buildLegend();
+        redraw();
+        pct(100);
+        document.getElementById('load-view').classList.remove('show');
+        return;
+      }
+    }
+  }catch(e){
+    dbg('yritykset.json virhe: '+e.message, false);
+  }
+  // JSON ei löydy — näytetään Excel-latausnäkymä
+  dbg('yritykset.json ei löydy — näytetään Excel-lataus', false);
+  // Paikallisella palvelimella kokeillaan myös Excel-tiedostoa
   var isLocal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
   if(isLocal){
     document.getElementById('local-hint').style.display='block';
     tryLocalExcel();
   }
-});
+}
 
 async function tryLocalExcel(){
   for(var i=0;i<LOCAL_NIMET.length;i++){
