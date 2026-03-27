@@ -122,10 +122,6 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
       <select id="sel-ta-m"><option value="">Kaikki</option></select>
     </div>
     <div class="sheet-section">
-      <div class="sheet-label">Palveluluokka</div>
-      <select id="sel-pl-m"><option value="">Kaikki</option></select>
-    </div>
-    <div class="sheet-section">
       <div class="sheet-label">Minimisumma</div>
       <select id="sel-min-m">
         <option value="0">Kaikki</option>
@@ -163,7 +159,6 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
   <div id="body">
     <div id="sidebar">
       <div><div class="sb-t">Toimiala (PRH)</div><select id="sel-ta"><option value="">Kaikki</option></select></div>
-      <div><div class="sb-t">Palveluluokka</div><select id="sel-pl"><option value="">Kaikki</option></select></div>
       <div>
         <div class="sb-t">Minimisumma</div>
         <select id="sel-min">
@@ -347,18 +342,11 @@ function redraw(){
   cg.clearLayers();
   var minSum=parseFloat(document.getElementById('sel-min').value)||0;
   var selTa=document.getElementById('sel-ta').value;
-  var selPl=document.getElementById('sel-pl').value;
   var nakyy=0;
   for(var i=0;i<allData.length;i++){
     var d=allData[i];
     if(!d.coords)continue;
-    // Jos palveluluokka valittu, käytä sen summaa pisteen kokoon
-    var naytSumma=d.sum;
-    if(selPl){
-      naytSumma=(d.palvluokat&&d.palvluokat[selPl])||0;
-      if(naytSumma===0)continue;
-    }
-    if(naytSumma<minSum)continue;
+    if(d.sum<minSum)continue;
     if(selTa&&d.ta.key!==selTa)continue;
     if(!activeKeys[d.ta.key])continue;
     nakyy++;
@@ -380,7 +368,8 @@ function redraw(){
         var plPct=d.sum>0?Math.round(plSum/d.sum*100):0;
         var active=selPl===plNimi?'font-weight:600;':'';
         var plKoodi=String(plNimi).trim();
-        var plSelite=JHS200[plKoodi]||null;
+        // Käytetään ensin datasta saatua nimeä, sitten JHS200-lookuppia
+        var plSelite=(d.palvluokat_nimet&&d.palvluokat_nimet[plKoodi])||JHS200[plKoodi]||null;
         var plLabel=plSelite?'<strong>'+plKoodi+'</strong> '+plSelite:plKoodi;
         plHtml+='<div class="pr" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;'+active+'">'+
           '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+plKoodi+(plSelite?' '+plSelite:'')+'">'+plLabel+'</span>'+
@@ -397,10 +386,7 @@ function redraw(){
       '<div class="pr">Osoite: '+(d.osoite||'–')+'</div>'+
       '<div class="pr">Laskuja: '+d.lkm+' kpl</div>'+
       '<div class="ps">Yhteensä: '+eur(d.sum)+'</div>'+
-      (plHtml?
-        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #eee">'+
-        '<div style="font-size:11px;color:#999;margin-bottom:4px">Palveluluokittain:</div>'+
-        plHtml+'</div>':'')+
+
       '<div style="margin-top:5px"><span class="pt" style="background:'+d.ta.color+'">'+d.ta.key+'</span></div>',
       {maxWidth:320}
     );
@@ -430,7 +416,7 @@ function buildLegend(){
   if(cv)sl.value=cv;
 
   // Kopioidaan desktop-valikot mobiiliin
-  [['sel-ta','sel-ta-m'],['sel-pl','sel-pl-m']].forEach(function(p){
+  [['sel-ta','sel-ta-m']].forEach(function(p){
     var src=document.getElementById(p[0]);
     var dst=document.getElementById(p[1]);
     if(!src||!dst)return;
@@ -446,7 +432,7 @@ function closeSheet(){ document.getElementById('filter-sheet').classList.remove(
 
 // Synkronoi desktop- ja mobiilisuodattimet
 function syncFilters(src){
-  var pairs=[['sel-ta','sel-ta-m'],['sel-pl','sel-pl-m'],['sel-min','sel-min-m']];
+  var pairs=[['sel-ta','sel-ta-m'],['sel-min','sel-min-m']];
   pairs.forEach(function(p){
     var other=src===p[0]?p[1]:p[0];
     var el=document.getElementById(other);
@@ -476,6 +462,16 @@ window.addEventListener('load',function(){
 });
 
 async function tryLataaJSON(){
+  // Ladataan ensin palveluluokkanimet jos saatavilla
+  try{
+    var jr=await fetch('jhs200.json');
+    if(jr.ok){
+      var jdata=await jr.json();
+      Object.assign(JHS200, jdata);
+      dbg('jhs200.json ladattu: '+Object.keys(jdata).length+' koodia', true);
+    }
+  }catch(e){ dbg('jhs200.json ei löydy, käytetään sisäistä taulukkoa', false); }
+
   try{
     var r=await fetch('yritykset.json');
     if(r.ok){
