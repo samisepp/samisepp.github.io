@@ -227,10 +227,10 @@ function aggregate(rows){
   var m={};
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
-    var yid=String(r['Y-tunnus']||r['Ytunnus']||r['y-tunnus']||r['ytunnus']||'').trim().replace(/\s/g,'');
+    var yid=String(r['Toimittajan Y-tunnus']||r['Y-tunnus']||r['Ytunnus']||r['y-tunnus']||r['ytunnus']||'').trim().replace(/\s/g,'');
     if(!yid||yid.length<5||yid==='-')continue;
     var nimi=String(r['Toimittajan nimi']||r['Toimittaja']||r['Nimi']||r['nimi']||'').trim();
-    var raw=String(r['Summa']||r['summa']||r['Laskun summa']||r['Nettosumma']||0).replace(',','.').replace(/\s/g,'');
+    var raw=String(r['Tiliöity summa ALV0']||r['Summa']||r['summa']||r['Laskun summa']||r['Nettosumma']||0).replace(',','.').replace(/\s/g,'');
     var sum=parseFloat(raw)||0;
     var ta=String(r['Toimiala']||r['toimiala']||'').trim();
     if(!m[yid])m[yid]={yid:yid,nimi:nimi,sum:0,lkm:0,taRivi:ta};
