@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Salon kaupungin ostolaskut 2024</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"/>
@@ -85,7 +85,8 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
   #filter-btn{display:flex;}
   #topbar h1{font-size:13px;}
   .pill{display:none;}
-  #p-nyt{display:flex!important;} #p-geo{} @media(max-width:700px){#p-geo{display:none;}}
+  #p-nyt{display:flex!important;}
+  #p-geo{display:none;}
   #infobar{display:none;}
   #li-badge{bottom:140px;}
 }
@@ -93,14 +94,6 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
 </head>
 <body>
 
-
-<!-- Lataus -->
-<div id="load-view">
-  <div style="font-size:28px">⏳</div>
-  <div id="lv-msg">Käsitellään...</div>
-  <div id="lv-sub"></div>
-  <div id="lv-bar"><div id="lv-bar-in"></div></div>
-</div>
 
 <!-- Latausnäkymä -->
 <div id="load-view">
@@ -269,44 +262,6 @@ var map,cg,allData=[],activeKeys={},prhC={},geoC={};
 for(var i=0;i<TOIMIALAT.length;i++)activeKeys[TOIMIALAT[i].key]=true;
 
 // Drag & drop
-async function fetchAll(yrit){
-  document.getElementById('load-view').classList.remove('show');
-
-  // Kokeillaan ensin valmista JSON-tiedostoa
-  var json=await lataaJSON();
-  if(json&&json.length>0){
-    dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
-    for(var i=0;i<json.length;i++){
-      var y=json[i];
-      y.ta=getTa(y.ta||'');
-      if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
-      allData.push(y);
-    }
-    var geo=allData.filter(function(d){return d.coords;}).length;
-    sset('p-geo', geo+' paikannettu');
-    buildLegend(); redraw(); pct(100);
-    return;
-  }
-
-  // JSON ei löydy — geokoodataan reaaliajassa Photonilla (hidas)
-  dbg('yritykset.json ei löydy, geokoodataan reaaliajassa...', false);
-  var ko=yrit.slice(0,100), geo=0;
-  for(var i=0;i<ko.length;i++){
-    var y=ko[i];
-    y.ta=getTa(y.taRivi||'');
-    y.coords=await geocode(y.nimi+' Finland');
-    if(y.coords) geo++;
-    allData.push(y);
-    pct(18+Math.round((i+1)/ko.length*78));
-    sset('p-geo', geo+' paikannettu');
-    sset('info-txt', 'Geokoodataan: '+(i+1)+'/'+ko.length+' · '+geo+' paikannettua');
-    buildLegend(); redraw();
-    await new Promise(function(r){setTimeout(r,350);});
-  }
-  dbg('Valmis: '+geo+'/'+ko.length+' paikannettua', geo>0);
-  pct(100);
-}
-
 function redraw(){
   if(!cg)return;
   cg.clearLayers();
@@ -394,8 +349,8 @@ window.addEventListener('load',function(){
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
   cg=L.markerClusterGroup({maxClusterRadius:50});
   map.addLayer(cg);
-  document.getElementById('sel-ta').addEventListener('change',redraw);
-  document.getElementById('sel-min').addEventListener('change',redraw);
+  document.getElementById('sel-ta').addEventListener('change',function(){syncFilters('sel-ta');});
+  document.getElementById('sel-min').addEventListener('change',function(){syncFilters('sel-min');});
   document.getElementById('tog-cl').addEventListener('change',function(){
     if(this.checked){map.addLayer(cg);}
     else{map.removeLayer(cg);var ls=cg.getLayers();for(var i=0;i<ls.length;i++)map.addLayer(ls[i]);}
@@ -407,8 +362,6 @@ window.addEventListener('load',function(){
 });
 
 async function tryLataaJSON(){
-  // Ladataan ensin palveluluokkanimet jos saatavilla
-
   try{
     var r=await fetch('yritykset.json');
     if(r.ok){
@@ -450,9 +403,7 @@ async function tryLataaJSON(){
   }catch(e){
     dbg('yritykset.json virhe: '+e.message, false);
   }
-  // JSON ei löydy — näytetään Excel-latausnäkymä
   dbg('yritykset.json ei löydy palvelimelta!', false);
-  // Paikallisella palvelimella kokeillaan myös Excel-tiedostoa
 }
 
 </script>
