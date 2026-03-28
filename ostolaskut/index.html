@@ -617,11 +617,16 @@ async function tryLataaJSON(){
           msg('Piirretään karttaa...', 'Paikannettu '+geo+' yritystä kartalle');
           pct(80);
           setTimeout(function(){
-            buildLegend();
-            redraw();
-            pct(100);
-            msg('Valmis!', '');
-            setTimeout(function(){ document.getElementById('load-view').classList.remove('show'); }, 500);
+            try{
+              buildLegend();
+              redraw();
+              pct(100);
+              msg('Valmis!', '');
+              setTimeout(function(){ document.getElementById('load-view').classList.remove('show'); }, 500);
+            }catch(err){
+              dbg('VIRHE: '+err.message, false);
+              msg('Virhe ladattaessa', err.message);
+            }
           }, 50);
         }, 50);
         return;
