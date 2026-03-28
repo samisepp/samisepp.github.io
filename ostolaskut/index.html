@@ -605,6 +605,8 @@ async function tryLataaJSON(){
         msg('Käsitellään toimittajatietoja...', json.length+' yritystä · '+eur(totalSum)+' yhteensä');
         pct(30);
         setTimeout(function(){
+          dbg('setTimeout 1 alkaa, käsitellään '+json.length+' yritystä...');
+          try{
           for(var i=0;i<json.length;i++){
             var y=json[i];
             y.ta=getTa(y.ta||'', y.tol||'');
@@ -616,16 +618,20 @@ async function tryLataaJSON(){
           dbg('yritykset.json ladattu: '+json.length+' yritystä', true);
           msg('Piirretään karttaa...', 'Paikannettu '+geo+' yritystä kartalle');
           pct(80);
+          }catch(err2){ dbg('VIRHE loop: '+err2.message, false); }
           setTimeout(function(){
             try{
+              dbg('Aloitetaan buildLegend...');
               buildLegend();
+              dbg('buildLegend valmis, aloitetaan redraw...');
               redraw();
+              dbg('redraw valmis!', true);
               pct(100);
               msg('Valmis!', '');
               setTimeout(function(){ document.getElementById('load-view').classList.remove('show'); }, 500);
             }catch(err){
-              dbg('VIRHE: '+err.message, false);
-              msg('Virhe ladattaessa', err.message);
+              dbg('VIRHE: '+err.message+' '+err.stack, false);
+              msg('Virhe: '+err.message, '');
             }
           }, 50);
         }, 50);
