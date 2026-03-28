@@ -291,6 +291,7 @@ select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-r
 function sid(id){ return document.getElementById(id); }
 function sset(id, val){ var el=document.getElementById(id); if(el) el.textContent=val; }
 function dbg(msg, ok) {
+  console.log((ok===false?'ERROR: ':ok===true?'OK: ':'')+msg);
   var el = document.getElementById('dbg');
   if (!el) return;
   var d = document.createElement('div');
