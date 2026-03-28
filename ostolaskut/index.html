@@ -300,6 +300,10 @@ function dbg(msg, ok) {
   el.appendChild(d);
   el.scrollTop = el.scrollHeight;
 }
+function msg(m,s){sset('lv-msg',m);sset('lv-sub',s||'');}
+function pct(p){var b=document.getElementById('lv-bar-in');if(b)b.style.width=p+'%';var b2=document.getElementById('pbar-in');if(b2)b2.style.width=p+'%';}
+function eur(n){return Number(n).toLocaleString('fi-FI',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
+function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
 
 
 var TOIMIALAT=[
