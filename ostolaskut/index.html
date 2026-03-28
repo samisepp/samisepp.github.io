@@ -11,106 +11,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css"/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.min.css"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:Arial,sans-serif;font-size:14px;background:#f4f2ee;}
-
-/* Latausnäkymä */
-#load-view{position:fixed;inset:0;z-index:9998;background:rgba(244,242,238,.96);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px;}
-#load-view.show{display:flex;}
-#lv-msg{font-size:16px;color:#1a1916;max-width:400px;}
-#lv-sub{font-size:12px;color:#888;}
-#lv-bar{width:260px;height:4px;background:#ddd;border-radius:2px;overflow:hidden;}
-#lv-bar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
-
-/* Karttanäkymä */
-#shell{display:flex;flex-direction:column;height:100dvh;}
-#topbar{background:#fff;border-bottom:1px solid #ddd;padding:0 12px;min-height:52px;display:flex;align-items:center;gap:8px;flex-shrink:0;overflow:visible;}
-#topbar h1{font-size:14px;font-weight:700;white-space:nowrap;color:#1a1916;}
-.pill{background:#f0ede8;border:1px solid #ddd;border-radius:20px;padding:3px 9px;font-size:11px;color:#555;white-space:nowrap;flex-shrink:0;}
-.spacer{flex:1;}
-#pbar{height:3px;background:#e0ddd8;flex-shrink:0;}
-#pbar-in{height:100%;background:#2d5fa6;width:0%;transition:width .3s;}
-
-/* Desktop layout */
-#body{display:flex;flex:1;overflow:hidden;}
-#sidebar{width:220px;flex-shrink:0;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column;overflow-y:auto;padding:14px;gap:16px;}
-.sb-t{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#aaa;margin-bottom:5px;font-weight:600;}
-select{width:100%;font-size:13px;padding:7px 10px;border:1px solid #ddd;border-radius:8px;background:#f8f7f5;color:#1a1916;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;}
-.tog-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#555;}
-.tog{position:relative;width:36px;height:20px;flex-shrink:0;}
-.tog input{opacity:0;width:0;height:0;position:absolute;}
-.tog-track{position:absolute;inset:0;background:#ccc;border-radius:10px;cursor:pointer;transition:background .2s;}
-.tog input:checked~.tog-track{background:#2d5fa6;}
-.tog-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-.tog input:checked~.tog-thumb{transform:translateX(16px);}
-#leg{display:flex;flex-direction:column;gap:3px;}
-.lr{display:flex;align-items:center;gap:7px;font-size:12px;color:#444;cursor:pointer;padding:3px 4px;border-radius:5px;}
-.lr:hover{background:#f0ede8;}
-.lr.dim{opacity:.3;}
-.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.leg-sz{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:#aaa;}
-#map{flex:1;}
-#infobar{height:28px;background:#fff;border-top:1px solid #ddd;display:flex;align-items:center;padding:0 16px;font-size:11px;color:#aaa;flex-shrink:0;}
-
-/* Popup */
-.pn{font-weight:700;font-size:14px;margin-bottom:6px;color:#1a1916;}
-.pr{font-size:12px;color:#666;margin:2px 0;}
-.ps{font-size:15px;font-weight:700;color:#2d5fa6;margin-top:8px;padding-top:8px;border-top:1px solid #eee;}
-.pt{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-top:5px;color:#fff;}
-
-/* Hakukenttä */
-#search-wrap{position:relative;flex-shrink:0;}
-#search-input{font-size:13px;padding:5px 30px 5px 10px;border:1px solid #ddd;border-radius:20px;background:#f8f7f5;color:#1a1916;width:180px;outline:none;transition:border-color .2s,width .2s;}
-#search-input:focus{border-color:#2d5fa6;width:220px;}
-#search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:0;display:none;line-height:1;}
-#search-clear.show{display:block;}
-#search-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:9999;max-height:260px;overflow-y:auto;display:none;}
-#search-dropdown.open{display:block;}
-.sd-item{padding:7px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f5f5f5;display:flex;flex-direction:column;gap:2px;}
-.sd-item:last-child{border-bottom:none;}
-.sd-item:hover,.sd-item.active{background:#f0f6ff;}
-.sd-name{font-weight:600;color:#1a1916;word-break:break-word;}
-.sd-sum{font-size:11px;color:#2d5fa6;}
-.sd-empty{padding:10px 12px;font-size:12px;color:#aaa;text-align:center;}
-@media(max-width:700px){
-  #search-input{width:130px;}
-  #search-input:focus{width:150px;}
-}
-
-/* LinkedIn badge (kartan päällä) */
-#li-badge{position:absolute;bottom:10px;left:10px;z-index:1000;background:#fff;border:1px solid #ddd;border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.10);text-decoration:none;cursor:pointer;}
-#li-badge:hover{box-shadow:0 4px 12px rgba(0,0,0,.15);}
-#li-badge svg{width:18px;height:18px;flex-shrink:0;}
-#li-badge span{font-size:12px;font-weight:600;color:#0a66c2;white-space:nowrap;}
-
-/* Mobiili: bottom sheet suodattimille */
-#filter-btn{display:none;position:absolute;bottom:10px;right:10px;z-index:1000;background:#2d5fa6;color:#fff;border:none;border-radius:50px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(45,95,166,.4);align-items:center;gap:6px;}
-#filter-sheet{display:none;position:fixed;bottom:0;left:0;right:0;z-index:2000;background:#fff;border-radius:16px 16px 0 0;padding:16px 16px 32px;box-shadow:0 -4px 20px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;}
-#filter-sheet.open{display:block;}
-#sheet-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
-#sheet-overlay{display:none;position:fixed;inset:0;z-index:1999;background:rgba(0,0,0,.3);}
-#sheet-overlay.open{display:block;}
-.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.sheet-section{display:flex;flex-direction:column;gap:5px;}
-.sheet-section.full{grid-column:1/-1;}
-.sheet-label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#aaa;font-weight:600;}
-.sheet-leg{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
-.sheet-leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#444;cursor:pointer;padding:4px 8px;border-radius:20px;border:1px solid #eee;background:#fafafa;}
-.sheet-leg-item.dim{opacity:.35;}
-.sheet-leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-
-@media(max-width:700px){
-  #sidebar{display:none;}
-  #filter-btn{display:flex;}
-  #topbar h1{font-size:13px;}
-  .pill{display:none;}
-  #p-nyt{display:flex!important;}
-  #p-geo{display:none;}
-  #infobar{display:none;}
-  #li-badge{bottom:10px;left:10px;right:auto;}
-}
-</style>
+<link rel="stylesheet" href="kartta.css">
 </head>
 <body>
 <a href="#map" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Siirry karttaan</a>
@@ -301,26 +202,37 @@ function dbg(msg, ok) {
 
 
 var TOIMIALAT=[
-  {key:'Rakentaminen',         color:'#c0392b',words:['rakennus','rakentami','maarakennus','purkaminen','talonrakennus']},
-  {key:'Terveys ja sosiaali',  color:'#27ae60',words:['terveys','sosiaali','hoito','lääkinnäl','hammas','psyk','vanhus','kuntoutus']},
-  {key:'Koulutus',             color:'#8e44ad',words:['koulu','opetus','koulutus','päiväkoti','varhais']},
-  {key:'Kauppa',               color:'#e67e22',words:['kauppa','myynti','tukku','vähittäis']},
-  {key:'Kuljetus',             color:'#d45a8a',words:['kuljetus','liikenne','logistiikka','varastointi','posti']},
-  {key:'Kiinteistö',           color:'#2980b9',words:['kiinteistö','isännöi','vuokraus','siivous','puhtaanapito']},
-  {key:'Teollisuus',           color:'#16a085',words:['valmistus','teollisuus','elintarvike','metalli','paperi','puu']},
-  {key:'IT ja viestintä',      color:'#2c3e50',words:['tietojenkäsittely','ohjelmisto','it-','ict','tietoliikenne']},
-  {key:'Energia ja vesi',      color:'#f39c12',words:['energia','sähkö','lämpö','vesi','jäte','ympäristö']},
-  {key:'Hallinto',             color:'#7f8c8d',words:['hallinto','julkinen','lakiasiain','tili','henkilöstö','konsultointi']},
-  {key:'Muu',                  color:'#546e7a',words:[]}
+  {key:'Maatalous ja metsätalous', color:'#7cb342', range:[1,9]},
+  {key:'Teollisuus',               color:'#16a085', range:[10,33]},
+  {key:'Energia ja vesi',          color:'#f39c12', range:[35,39]},
+  {key:'Rakentaminen',             color:'#c0392b', range:[41,43]},
+  {key:'Kauppa',                   color:'#e67e22', range:[45,47]},
+  {key:'Kuljetus ja varastointi',  color:'#d45a8a', range:[49,53]},
+  {key:'Majoitus ja ravitsemus',   color:'#ff7043', range:[55,56]},
+  {key:'IT ja viestintä',          color:'#2c3e50', range:[58,63]},
+  {key:'Rahoitus ja vakuutus',     color:'#5c6bc0', range:[64,66]},
+  {key:'Kiinteistöala',            color:'#2980b9', range:[68,68]},
+  {key:'Ammatillinen toiminta',    color:'#00897b', range:[69,75]},
+  {key:'Hallinto ja tukipalvelut', color:'#7f8c8d', range:[77,82]},
+  {key:'Julkinen hallinto',        color:'#546e7a', range:[84,84]},
+  {key:'Koulutus',                 color:'#8e44ad', range:[85,85]},
+  {key:'Terveys ja sosiaali',      color:'#27ae60', range:[86,88]},
+  {key:'Taiteet ja viihde',        color:'#ec407a', range:[90,93]},
+  {key:'Muu palvelutoiminta',      color:'#8d6e63', range:[94,99]},
+  {key:'Muu / tuntematon',         color:'#bdbdbd', range:[0,0]}
 ];
-
-function getTa(s){if(s){var l=s.toLowerCase();for(var i=0;i<TOIMIALAT.length-1;i++){for(var j=0;j<TOIMIALAT[i].words.length;j++){if(l.indexOf(TOIMIALAT[i].words[j])!==-1)return TOIMIALAT[i];}}}return TOIMIALAT[TOIMIALAT.length-1];}
-function getR(s){return s<2000?5:s<10000?7:s<50000?10:s<200000?14:s<500000?19:25;}
-function eur(n){return n.toLocaleString('fi-FI',{style:'currency',currency:'EUR',maximumFractionDigits:0});}
-function pct(p){document.getElementById('lv-bar-in').style.width=p+'%';document.getElementById('pbar-in').style.width=p+'%';}
-function msg(m,s){sset('lv-msg', m);sset('lv-sub', s||'');}
-
-var map,cg,allData=[],activeKeys={},prhC={},geoC={};
+function getTa(taSelite, tolKoodi){
+  if(tolKoodi){
+    var n=parseInt(String(tolKoodi).substring(0,2));
+    if(!isNaN(n)&&n>0){
+      for(var i=0;i<TOIMIALAT.length-1;i++){
+        var r=TOIMIALAT[i].range;
+        if(n>=r[0]&&n<=r[1]) return TOIMIALAT[i];
+      }
+    }
+  }
+  return TOIMIALAT[TOIMIALAT.length-1];
+}
 for(var i=0;i<TOIMIALAT.length;i++)activeKeys[TOIMIALAT[i].key]=true;
 
 // Drag & drop
@@ -594,7 +506,7 @@ async function tryLataaJSON(){
         setTimeout(function(){
           for(var i=0;i<json.length;i++){
             var y=json[i];
-            y.ta=getTa(y.ta||'');
+            y.ta=getTa(y.ta||'', y.tol||'');
             if(y.lat&&y.lng) y.coords={lat:y.lat,lng:y.lng};
             allData.push(y);
           }
