@@ -1,3 +1,4 @@
+<img width="828" height="274" alt="launch" src="https://github.com/user-attachments/assets/c96099b1-2cfa-48af-99f6-4d446c6eed34" />
 # Roof Analyzer – katon pinta-ala laserkeilausaineistosta
 
 Roof Analyzer on QGIS-lisäosa, joka laskee rakennuksen katon todellisen pinta-alan, kaltevuuden ja kattolappeet Maanmittauslaitoksen laserkeilausaineistosta. Tuloksesta saa PDF-raportin.
@@ -188,7 +189,8 @@ Pistepilvitasosta on suurta hyötyä rajauksen piirtämisessä (ks. [kohta 3](#3
 
 ### 2. Avaa lisäosa ja valitse pistepilvitaso
 
-1. Avaa lisäosa: **Lisäosat → Roof Analyzer → Roof Analyzer** tai työkalurivin painikkeesta.
+1. Avaa lisäosa: **Lisäosat → Roof Analyzer → Roof Analyzer** tai työkalurivin painikkeesta. <img width="828" height="274" alt="launch" src="https://github.com/user-attachments/assets/236f9cf9-ee1d-462a-85fe-6692dc0b7e46" />
+
 2. Kohdan **1. Pistepilvitaso** valikossa näkyvät kaikki projektiin lisätyt pistepilvitasot. Valitse:
    - **Kaikki pistepilvitasot** – käyttää kaikkia projektin pistepilvitasoja. Tämä on oletus, kun tasoja on useampi kuin yksi. Valitse tämä, jos rakennus on kahden karttalehden rajalla.
    - **yksittäinen taso** – käyttää vain valittua tasoa.
