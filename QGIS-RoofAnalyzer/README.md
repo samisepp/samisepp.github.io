@@ -26,7 +26,7 @@ Roof Analyzer on QGIS-lisäosa, joka laskee rakennuksen katon todellisen pinta-a
 Lisäosa on tehty maanmittausinsinööriopiskelijan omaan tarpeeseen. Hän halusi tarkistaa katon pinta-alan ja verrata tulosta siihen, mitä kattomaalaustarjousten jättäjät olivat mitanneet tai arvioineet.
 
 Tulokset ovat laskennallisia arvioita (ks. [Rajoitukset](#rajoitukset)).
-
+![Roof Analyzerin tulos aumakatolla](RoofAnalyzer.png)
 ---
 
 ## Mitä lisäosa tekee
