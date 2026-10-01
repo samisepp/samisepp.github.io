@@ -22,6 +22,7 @@ Interaktiivinen karttavisualisointi Salon kaupungin ostolaskuista vuonna 2024.
 
 ### 2. **QGIS2Threejs Plugin Demo** (`plugindemo/`)
 Esittelydemo QGIS2Threejs-lisäosalle, joka visualisoi QGIS-projekteja 3D-muodossa.
+https://samisepp.github.io/plugindemo/
 
 **Ominaisuudet:**
 - 🎯 **3D-visualisointi** – Three.js-pohjainen 3D-renderöinti kartta- ja maastotiedoista
