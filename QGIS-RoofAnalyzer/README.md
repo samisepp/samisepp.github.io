@@ -27,6 +27,13 @@ Lisäosa on tehty maanmittausinsinööriopiskelijan omaan tarpeeseen. Hän halus
 
 Tulokset ovat laskennallisia arvioita (ks. [Rajoitukset](#rajoitukset)).
 
+Allaolevassa kuvassa on käytetty piirrä rajaus -toimintoa joka on suositeltavampi tapa. Rakennuksen kattotuolien piirustuksissa kattotuolin kulmaksi on kerrottu 21.8 astetta ja plugin on tämän laskenut pistepilvestä kohtalaisen hyvin.
+![Roof Analyzerin tulos aumakatolla](RoofAnalyzer.png)
+
+
+Tässä allaolevassa kuvassa on käytetty valmista polygonia MML maastotietokannan aineistosta Valitse kartalta toiminnallisuudella. Rajaus ei ole kovin onnistunut.
+![Roof Analyzerin tulos aumakatolla](RoofAnalyzer_MML_rakennusrajaus.png)
+
 ---
 
 ## Mitä lisäosa tekee
