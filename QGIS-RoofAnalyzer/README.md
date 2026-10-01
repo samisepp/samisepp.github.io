@@ -26,12 +26,7 @@ Roof Analyzer on QGIS-lisäosa, joka laskee rakennuksen katon todellisen pinta-a
 Lisäosa on tehty maanmittausinsinööriopiskelijan omaan tarpeeseen. Hän halusi tarkistaa katon pinta-alan ja verrata tulosta siihen, mitä kattomaalaustarjousten jättäjät olivat mitanneet tai arvioineet.
 
 Tulokset ovat laskennallisia arvioita (ks. [Rajoitukset](#rajoitukset)).
-Allaolevassa kuvassa on käytetty piirrä rajaus -toimintoa joka on suositeltavampi tapa. Rakennuksen kattotuolien piirustuksissa kattotuolin kulmaksi on kerrottu 21.8 astetta ja plugin on tämän laskenut pistepilvestä kohtalaisen hyvin.
-![Roof Analyzerin tulos aumakatolla](RoofAnalyzer.png)
 
-
-Tässä allaolevassa kuvassa on käytetty valmista polygonia MML maastotietokannan aineistosta Valitse kartalta toiminnallisuudella. Rajaus ei ole kovin onnistunut.
-![Roof Analyzerin tulos aumakatolla](RoofAnalyzer_MML_rakennusrajaus.png)
 ---
 
 ## Mitä lisäosa tekee
@@ -171,25 +166,33 @@ Aineisto toimitetaan LAZ-tiedostoina, ja yksi tiedosto kattaa noin 1 km × 1 km 
 
 1. Avaa QGIS ja luo uusi projekti.
 2. Lisää taustakartaksi **ilmakuva** (ortokuva), jotta näet rakennukset.
-3. Lisää laserkeilausaineisto karttaan **pistepilvitasona**:
+3. Lisää laserkeilausaineisto karttaan **pistepilvitasona**. Lisäosa lukee aineiston tästä tasosta, joten tämä vaihe on pakollinen.
    - Vedä LAZ-tiedosto hiirellä QGIS-ikkunaan, tai
    - valitse **Taso → Lisää taso → Lisää pistepilvitaso…**
+   - Jos rakennus on kahden karttalehden rajalla, lisää molemmat tiedostot karttaan.
    - Ensimmäisellä kerralla QGIS indeksoi tiedoston, mikä voi kestää minuutin tai pari. Indeksi tallentuu tiedoston viereen, joten seuraavilla kerroilla taso avautuu nopeasti.
 4. Jätä näkyviin vain luokka, jossa katot ovat:
    - QGIS näyttää pistepilven valmiiksi luokittain väritettynä, ja luokat näkyvät tasoluettelossa pistepilvitason alla.
    - Poista valinta kaikista muista luokista paitsi **High Vegetation** (korkea kasvillisuus, luokka 5).
    - MML:n aineistossa katot ovat tässä luokassa. Kartalla näkyvät nyt vain katot ja puut, ja maanpinta sekä matala kasvillisuus piiloutuvat.
+   - Luokkien piilottaminen vaikuttaa vain siihen, mitä kartalla näkyy. Lisäosa käyttää laskennassa aina kaikkia tarvitsemiaan luokkia, myös piilotettuja maanpintapisteitä.
 
 Pistepilvitasosta on suurta hyötyä rajauksen piirtämisessä (ks. [kohta 3](#3-rajaa-rakennus)).
 
-### 2. Avaa lisäosa ja valitse LAZ-tiedostot
+### 2. Avaa lisäosa ja valitse pistepilvitaso
 
 1. Avaa lisäosa: **Lisäosat → Roof Analyzer → Roof Analyzer** tai työkalurivin painikkeesta.
-2. Kohdassa **1. Laserkeilausaineisto** valitse aineisto:
-   - **Tiedostot…** – valitse yksi tai useampi LAZ-tiedosto, tai
-   - **Kansio…** – valitse kansio. Lisäosa ottaa mukaan kaikki kansion ja sen alikansioiden LAZ/LAS-tiedostot.
+2. Kohdan **1. Pistepilvitaso** valikossa näkyvät kaikki projektiin lisätyt pistepilvitasot. Valitse:
+   - **Kaikki pistepilvitasot** – käyttää kaikkia projektin pistepilvitasoja. Tämä on oletus, kun tasoja on useampi kuin yksi. Valitse tämä, jos rakennus on kahden karttalehden rajalla.
+   - **yksittäinen taso** – käyttää vain valittua tasoa.
 
-Lisäosa lukee aina vain ne tiedostot, jotka osuvat rakennuksen kohdalle, joten koko kansion valitseminen ei hidasta laskentaa. Valinta muistetaan seuraavalla käyttökerralla.
+Lisäosa lukee aina vain ne tiedostot, jotka osuvat rakennuksen kohdalle, joten useiden tasojen valitseminen ei hidasta laskentaa. Valikko päivittyy automaattisesti, kun lisäät tai poistat pistepilvitasoja.
+
+Valikon alla näkyy punaisella huomautus, jos:
+- tason lähdetiedosto ei ole LAZ- tai LAS-tiedosto, tai
+- tason koordinaattijärjestelmä ei ole ETRS-TM35FIN (EPSG:3067).
+
+Jos valikossa lukee *Ei pistepilvitasoja – lisää LAZ-tiedosto karttaan*, palaa [kohtaan 1](#1-valmistele-karttanäkymä).
 
 ### 3. Rajaa rakennus
 
@@ -308,7 +311,7 @@ Valitse tuloksista **Näytä diagnostiikka**, niin näet laskennan välivaiheet:
 |---|---|
 | *Puuttuva kirjasto: No module named 'laspy'* | Python-kirjastot puuttuvat tai ne on asennettu väärään Pythoniin. Tee [vaihe 1](#vaihe-1-python-kirjastojen-asennus-windows) uudelleen OSGeo4W Shellissä järjestelmänvalvojana ja käynnistä QGIS uudelleen. |
 | *Lisäosa ei ole yhteensopiva tämän QGIS-version kanssa* | QGIS on liian vanha. Päivitä vähintään versioon 3.28. |
-| *Mikään valituista LAZ-tiedostoista ei kata rakennuksen aluetta* | Valitsemasi tiedostot ovat eri alueelta kuin rakennus. Tarkista, että tilasit oikean karttalehden ja valitsit oikean tiedoston. |
+| *Mikään valituista LAZ-tiedostoista ei kata rakennuksen aluetta* | Valitun pistepilvitason aineisto on eri alueelta kuin rakennus. Tarkista, että tilasit oikean karttalehden ja valitsit oikean tason, tai valitse **Kaikki pistepilvitasot**. |
 | *Alueelta ei löytynyt yhtään laserpistettä* | Rajaus ei osu aineiston alueelle, tai aineisto ei ole ETRS-TM35FIN-koordinaatistossa. |
 | Lisäosa ei näy valikossa asennuksen jälkeen | Tarkista **Lisäosat → Hallitse ja asenna lisäosia… → Asennettu**, että Roof Analyzerin valintaruutu on valittuna. |
 | Muutokset eivät näy uuden version asennuksen jälkeen | Poista vanha versio, käynnistä QGIS uudelleen ja asenna uusi. |
