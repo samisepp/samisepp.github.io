@@ -26,7 +26,12 @@ Roof Analyzer on QGIS-lisäosa, joka laskee rakennuksen katon todellisen pinta-a
 Lisäosa on tehty maanmittausinsinööriopiskelijan omaan tarpeeseen. Hän halusi tarkistaa katon pinta-alan ja verrata tulosta siihen, mitä kattomaalaustarjousten jättäjät olivat mitanneet tai arvioineet.
 
 Tulokset ovat laskennallisia arvioita (ks. [Rajoitukset](#rajoitukset)).
+Allaolevassa kuvassa on käytetty piirrä rajaus -toimintoa joka on suositeltavampi tapa. Rakennuksen kattotuolien piirustuksissa kattotuolin kulmaksi on kerrottu 21.8 astetta ja plugin on tämän laskenut pistepilvestä kohtalaisen hyvin.
 ![Roof Analyzerin tulos aumakatolla](RoofAnalyzer.png)
+
+
+Tässä allaolevassa kuvassa on käytetty valmista polygonia MML maastotietokannan aineistosta Valitse kartalta toiminnallisuudella. Rajaus ei ole kovin onnistunut.
+![Roof Analyzerin tulos aumakatolla](RoofAnalyzer_MML_rakennusrajaus.png)
 ---
 
 ## Mitä lisäosa tekee
