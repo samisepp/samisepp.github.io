@@ -1,4 +1,3 @@
-<img width="828" height="274" alt="launch" src="https://github.com/user-attachments/assets/c96099b1-2cfa-48af-99f6-4d446c6eed34" />
 # Roof Analyzer – katon pinta-ala laserkeilausaineistosta
 
 Roof Analyzer on QGIS-lisäosa, joka laskee rakennuksen katon todellisen pinta-alan, kaltevuuden ja kattolappeet Maanmittauslaitoksen laserkeilausaineistosta. Tuloksesta saa PDF-raportin.
