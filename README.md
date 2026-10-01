@@ -35,10 +35,10 @@ https://samisepp.github.io/plugindemo/
 
 ---
 
-### 3. **Roof Analyzer – QGIS-lisäosa** (`roof_analyzer/`)
+### 3. **Roof Analyzer – QGIS-lisäosa** (`QGIS-RoofAnalyzer/`)
 QGIS-lisäosa, joka laskee rakennuksen katon todellisen pinta-alan Maanmittauslaitoksen laserkeilausaineistosta. Tehty katon pinta-alan tarkistamiseen ja vertailuun kattomaalaustarjouksissa ilmoitettuihin pinta-aloihin.
 
-Asennus- ja käyttöohje: [roof_analyzer/README.md](roof_analyzer/README.md)
+Asennus- ja käyttöohje: [QGIS-RoofAnalyzer/README.md](roof_analyzer/README.md)
 
 **Ominaisuudet:**
 - ✏️ **Rakennuksen rajaus** – Piirrä rajaus käsin tai valitse rakennus valmiilta polygonitasolta
