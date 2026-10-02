@@ -27,11 +27,12 @@ Lisäosa on tehty maanmittausinsinööriopiskelijan omaan tarpeeseen. Hän halus
 
 Tulokset ovat laskennallisia arvioita (ks. [Rajoitukset](#rajoitukset)).
 
-Allaolevassa kuvassa on käytetty piirrä rajaus -toimintoa joka on suositeltavampi tapa. Rakennuksen kattotuolien piirustuksissa kattotuolin kulmaksi on kerrottu 21.8 astetta ja plugin on tämän laskenut pistepilvestä kohtalaisen hyvin.
+Allaolevassa kuvassa on käytetty piirrä rajaus -toimintoa joka on suositeltavampi tapa mikäli räystäiden lähellä on muita korkeita rakenteita, puita tai vaikka rekan perävaunuja joita ei haluta laskentaan mukaan. 
+Esimerkin rakennuksen kattotuolien piirustuksissa kattotuolin kulmaksi on kerrottu 21.8 astetta ja plugin on tämän laskenut pistepilvestä kohtalaisen hyvin.
 ![Roof Analyzerin tulos aumakatolla](RoofAnalyzer.png)
 
 
-Tässä allaolevassa kuvassa on käytetty valmista polygonia MML maastotietokannan aineistosta Valitse kartalta toiminnallisuudella. Rajaus ei ole kovin onnistunut.
+Tässä allaolevassa kuvassa on käytetty valmista polygonia MML maastotietokannan aineistosta Valitse kartalta toiminnallisuudella, joka voi toimia oikein jos rakennuksen ympärillä on kauttaaltaan tyhjää tilaa. Tässä esimerkissä rajaus rakennuspolygonista ei ole kovin onnistunut. Rakennus ei ole täysin polygonin muotoinen - etuoven kohdalla katossa on ulkonema jonka vuoksi puskuria täytyy kasvattaa polygonin ulkopuolelle, ja tässä tilanteessa rakennuksen nurkalla oleva puu tarttuu laskentaan mukaan. 
 ![Roof Analyzerin tulos aumakatolla](RoofAnalyzer_MML_rakennusrajaus.png)
 
 ---
